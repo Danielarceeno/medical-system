@@ -1,0 +1,29 @@
+body { font-family: sans-serif; background-color: #f4f4f9; color: #333; margin: 0; }
+header { background-color: #4A90E2; color: white; padding: 1rem; text-align: center; }
+main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+.filtros { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; align-items: center; }
+.filtros input[type="text"] { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; }
+#resultados-container { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; }
+.card h3 { margin-top: 0; color: #4A90E2; }
+.card p { margin: 0.5rem 0; }
+.card .preco-sns { font-weight: bold; font-size: 1.2rem; color: #34A853; }
+.card .preco-original { text-decoration: line-through; color: #999; }
+.card.destaque-cidade { border: 2px solid #FBC02D; } /* Destaque para a cidade principal */
+.card.vizinha { border: 2px dashed #7B1FA2; } /* Destaque para cidades vizinhas */
+.economia {
+    margin-top: 1rem;
+    color: #00796B; /* Um tom de verde escuro */
+    font-size: 1.1rem;
+    background-color: #E0F2F1; /* Um fundo verde bem claro */
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+.data-atualizacao {
+    font-size: 0.8rem; /* Tamanho de fonte menor */
+    color: #666; /* Cor cinza */
+    text-align: right; /* Alinha à direita */
+    margin-top: 1rem;
+    font-style: italic; /* Estilo itálico */
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Clínicas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Encontre a Melhor Consulta</h1>
+    </header>
+
+    <main>
+        <section class="filtros">
+            <input type="text" id="filtro-especialidade" placeholder="Digite a especialidade">
+            <input type="text" id="filtro-cidade" placeholder="Digite a cidade (ex: Orleans)">
+            <input type="text" id="filtro-nome" placeholder="Nome do médico ou clínica">
+            <button id="btn-limpar">Limpar Filtros</button>
+            <div class="filtro-valor-grupo">
+                <input type="number" id="filtro-valor-min" placeholder="Valor Mín.">
+                <span>-</span>
+                <input type="number" id="filtro-valor-max" placeholder="Valor Máx.">
+            </div>
+        </section>
+        <section class="cadastro-container">
+            <details>
+                <summary>Cadastrar Novo Profissional</summary>
+                <form id="form-cadastro">
+                    <input type="text" id="cad-nome-clinica" placeholder="Nome da Clínica" required>
+                    <input type="text" id="cad-nome-medico" placeholder="Nome do Médico" required>
+                    <input type="text" id="cad-especialidade" placeholder="Especialidade" required>
+                    <input type="text" id="cad-cidade" placeholder="Cidade" required>
+                    <input type="text" id="cad-estado" placeholder="Estado (UF)" required>
+                    <input type="number" id="cad-valor-sns" placeholder="Valor pela SNS" required>
+                    <input type="number" id="cad-valor-original" placeholder="Valor Original" required>
+                    <button type="submit">Cadastrar</button>
+                </form>
+            </details>
+        </section>
+        <section id="resultados-container">
+            </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
