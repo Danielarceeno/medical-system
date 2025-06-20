@@ -1,71 +1,43 @@
-// Importar os pacotes necessários
 const express = require('express');
 const { JWT } = require('google-auth-library');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-require('dotenv').config(); // Carrega as variáveis do arquivo .env
+const cors = require('cors');
+require('dotenv').config();
 
-// Configurações
 const PORT = process.env.PORT || 3000;
-const creds = require('./credentials.json'); // O arquivo JSON que você baixou
+const creds = require('./credentials.json');
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
-// Inicializar o servidor Express
 const app = express();
-app.use(express.static('public')); // Servir arquivos estáticos da pasta 'public'
+app.use(cors());
+app.use(express.static('public'));
 app.use(express.json());
 
-// Função para autenticar e carregar a planilha
-async function getDoc() {
-    const serviceAccountAuth = new JWT({
-        email: creds.client_email,
-        key: creds.private_key.replace(/\\n/g, '\n'), // Formatação da chave
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-    const doc = new GoogleSpreadsheet(SHEET_ID, serviceAccountAuth);
-    await doc.loadInfo(); // Carrega as propriedades da planilha
-    return doc;
-}
-
-// Rota da API para buscar os dados
 app.get('/api/dados', async (req, res) => {
     try {
         const doc = await getDoc();
-        const sheet = doc.sheetsByIndex[0]; // Pega a primeira aba da planilha
-        const rows = await sheet.getRows(); // Pega todas as linhas
-
-        // Mapeia as linhas para um formato JSON mais limpo
+        const sheet = doc.sheetsByIndex[0];
+        const rows = await sheet.getRows();
         const data = rows.map(row => {
             const rowData = {};
-            // Pega os cabeçalhos da planilha como chaves do objeto
             sheet.headerValues.forEach(header => {
                 rowData[header] = row.get(header);
             });
-            rowData.rowIndex = row.rowIndex;
+            rowData.rowIndex = row._rowNumber;
             return rowData;
         });
-
-        // Filtros
-        const { regiao, nomeMedico, valorMax } = req.query;
-        if (regiao) data = data.filter(d => d.regiao && d.regiao.toLowerCase().includes(regiao.toLowerCase()));
-        if (nomeMedico) data = data.filter(d => d.nomeMedico && d.nomeMedico.toLowerCase().includes(nomeMedico.toLowerCase()));
-        if (valorMax) data = data.filter(d => Number(d.valorConsulta) <= Number(valorMax));
-
         res.json(data);
     } catch (error) {
-        console.error('Erro ao buscar dados da planilha:', error);
+        console.error('Erro ao buscar dados:', error);
         res.status(500).json({ error: 'Falha ao buscar dados' });
     }
 });
+
 app.post('/api/cadastrar', async (req, res) => {
     try {
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
-
-        // req.body contém os dados enviados pelo formulário no frontend
-        const newRow = req.body; 
-
-        // Adiciona a nova linha na planilha
-        // As chaves do objeto (ex: 'nome_da_clinica') devem ser IDÊNTICAS aos cabeçalhos da sua planilha
+        const newRow = req.body;
         await sheet.addRow({
             nome_da_clinica: newRow.nomeClinica,
             nome_do_medico: newRow.nomeMedico,
@@ -73,41 +45,77 @@ app.post('/api/cadastrar', async (req, res) => {
             estado: newRow.estado,
             valor_pela_sns: newRow.valorSns,
             valor_original: newRow.valorOriginal,
-            especialidade: newRow.especialidade
+            especialidade: newRow.especialidade,
+            atualizado: newRow.atualizado
         });
-
         res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
-
     } catch (error) {
         console.error('Erro ao cadastrar:', error);
         res.status(500).json({ error: 'Falha ao cadastrar os dados.' });
     }
 });
+
+app.put('/api/editar/:rowIndex', async (req, res) => {
+    try {
+        const doc = await getDoc();
+        const sheet = doc.sheetsByIndex[0];
+        const rows = await sheet.getRows();
+        const rowIndexToEdit = parseInt(req.params.rowIndex);
+        const updatedData = req.body;
+        const rowToEdit = rows.find(row => row._rowNumber === rowIndexToEdit);
+
+        if (rowToEdit) {
+            rowToEdit.set('nome_da_clinica', updatedData.nomeClinica);
+            rowToEdit.set('nome_do_medico', updatedData.nomeMedico);
+            rowToEdit.set('especialidade', updatedData.especialidade);
+            rowToEdit.set('cidade', updatedData.cidade);
+            rowToEdit.set('estado', updatedData.estado);
+            rowToEdit.set('valor_pela_sns', updatedData.valorSns);
+            rowToEdit.set('valor_original', updatedData.valorOriginal);
+            rowToEdit.set('atualizado', updatedData.atualizado);
+            await rowToEdit.save();
+            res.status(200).json({ message: 'Registro atualizado com sucesso!' });
+        } else {
+            res.status(404).json({ error: 'Registro não encontrado para edição.' });
+        }
+    } catch (error) {
+        console.error('Erro ao editar:', error);
+        res.status(500).json({ error: 'Falha ao editar o registro.' });
+    }
+});
+
 app.delete('/api/excluir/:rowIndex', async (req, res) => {
     try {
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
         const rows = await sheet.getRows();
-        
-        const rowIndexToDelete = req.params.rowIndex;
-
-        // --- LINHA MODIFICADA ---
-        // Converte o índice da URL para número e usa a comparação estrita (===)
-        const rowToDelete = rows.find(row => row.rowIndex === parseInt(rowIndexToDelete));
+        const rowIndexToDelete = parseInt(req.params.rowIndex);
+        const rowToDelete = rows.find(row => row._rowNumber === rowIndexToDelete);
 
         if (rowToDelete) {
             await rowToDelete.delete();
             res.status(200).json({ message: 'Registro excluído com sucesso!' });
         } else {
-            // Este bloco não será mais acionado pelo motivo de tipo
-            res.status(404).json({ error: 'Registro não encontrado.' });
+            res.status(404).json({ error: `Registro não encontrado para rowIndex: ${rowIndexToDelete}` });
         }
-
     } catch (error) {
         console.error('Erro ao excluir:', error);
-        res.status(500).json({ error: 'Falha ao excluir o registro.' });
+        res.status(500).json({ error: `Falha ao excluir o registro: ${error.message}` });
     }
 });
+
+// Função de autenticação
+async function getDoc() {
+    const serviceAccountAuth = new JWT({
+        email: creds.client_email,
+        key: creds.private_key.replace(/\\n/g, '\n'),
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    const doc = new GoogleSpreadsheet(SHEET_ID, serviceAccountAuth);
+    await doc.loadInfo();
+    return doc;
+}
+
 // Iniciar o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

@@ -1,7 +1,328 @@
+/* Definição das cores para fácil manutenção */
+:root {
+    --azul-claro: #EAF2FF;
+    --azul-escuro: #4A69E2;
+    --cinza-texto: #555;
+    --cinza-borda: #ccc;
+}
+
+/* Estilo do Botão Principal de Cadastro */
+.container-botao-cadastro {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.botao-principal-cadastro {
+    background-color: var(--azul-claro);
+    color: var(--azul-escuro);
+    border: 2px solid var(--azul-claro);
+    border-radius: 25px;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.botao-principal-cadastro:hover {
+    background-color: var(--azul-escuro);
+    color: white;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+/* Estilos do Modal */
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none; /* Escondido por padrão */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-container.ativo {
+    display: flex; /* Mostra o modal quando a classe 'ativo' é adicionada */
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    animation: abreModal 0.4s ease;
+}
+
+@keyframes abreModal {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fechar-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--cinza-borda);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.fechar-modal:hover {
+    color: var(--cinza-texto);
+}
+
+
+/* Estilos do Formulário dentro do Modal */
+.modal-content h2 {
+    text-align: center;
+    color: var(--azul-escuro);
+    margin-bottom: 25px;
+}
+
+.form-grupo {
+    margin-bottom: 15px;
+}
+
+.form-grupo label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+}
+
+.form-grupo input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    box-sizing: border-box; /* Garante que o padding não afete a largura total */
+}
+
+.form-grupo-inline {
+    display: flex;
+    gap: 15px;
+}
+
+.form-grupo-inline .form-grupo {
+    flex: 1;
+}
+
+.botao-form-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--azul-escuro);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.botao-form-submit:hover {
+    background-color: #3a5ac2;
+}
+
+
 body { font-family: sans-serif; background-color: #f4f4f9; color: #333; margin: 0; }
 header { background-color: #4A90E2; color: white; padding: 1rem; text-align: center; }
 main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
-.filtros { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; align-items: center; }
+.filtros {
+    display: flex;
+    flex-direction: column; /* Organiza os grupos um abaixo do outro */
+    gap: 1rem;
+    padding: 1.5rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+    border: 1px solid #e0e0e0;
+}
+
+.grupo-inputs-texto, .grupo-inputs-valor {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem para a linha de baixo */
+    gap: 1rem;
+    align-items: center;
+}
+
+.grupo-inputs-texto input {
+    flex: 1 1 200px; /* Faz os inputs crescerem e ocuparem o espaço */
+}
+
+
+/* Estilos Gerais dos Inputs nos Filtros */
+.filtros input[type="text"],
+.filtros input[type="number"] {
+    background-color: #f9f9f9;
+    border: 2px solid var(--cinza-borda);
+    border-radius: 8px; /* Cantos arredondados */
+    padding: 12px;
+    font-size: 1rem;
+    color: var(--cinza-texto);
+    transition: all 0.3s ease; /* Transição suave */
+}
+
+/* Efeito de foco nos inputs */
+.filtros input[type="text"]:focus,
+.filtros input[type="number"]:focus {
+    outline: none;
+    border-color: var(--azul-escuro); /* Borda azul ao focar */
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(74, 105, 226, 0.2); /* Sombra sutil azul */
+}
+
+/* Placeholder (texto de dica) estilizado */
+.filtros input::placeholder {
+    color: #aaa;
+}
+
+
+/* Estilo do Grupo de Valor (Mín. e Máx.) */
+.filtro-valor-grupo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.filtro-valor-grupo span {
+    color: var(--cinza-texto);
+    font-size: 1.2rem;
+}
+.filtro-valor-grupo input {
+    width: 100px; /* Largura fixa para os campos de valor */
+}
+
+
+/* Estilo do Botão "Limpar Filtros" */
+#btn-limpar {
+    background-color: #f1f1f1; /* Fundo cinza claro */
+    color: var(--cinza-texto);
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#btn-limpar:hover {
+    background-color: #e0e0e0;
+    border-color: var(--cinza-borda);
+    color: #333;
+}
+
+/* Adicione ao final de public/style.css */
+
+.card-footer {
+    display: flex;
+    justify-content: space-between; /* Alinha os itens nas extremidades */
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0; /* Linha sutil de separação */
+}
+
+.btn-editar {
+    background-color: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.btn-editar:hover {
+    background-color: #f1f1f1;
+    color: #333;
+    border-color: #aaa;
+}
+
+.data-atualizacao {
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+}
+/* --- AJUSTES DE LAYOUT DOS CARDS --- */
+
+/* Garante que o header só ocupe o espaço do título */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Rodapé do Card com botões à esquerda e data à direita */
+.card-footer {
+    display: flex;
+    justify-content: space-between; /* Mágica do alinhamento */
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0; 
+}
+
+/* Novo container para agrupar os botões de ação */
+.botoes-acao {
+    display: flex;
+    gap: 0.5rem; /* Espaço entre os botões */
+}
+
+/* --- ESTILOS DOS BOTÕES DE AÇÃO --- */
+
+/* Estilo base para ambos os botões (Editar e Excluir) */
+.btn-editar, .btn-excluir {
+    background-color: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem; /* Espaço entre o emoji e o texto */
+    transition: all 0.2s ease;
+}
+
+/* Efeito hover para o botão de Editar */
+.btn-editar:hover {
+    background-color: #f1f1f1;
+    color: #333;
+    border-color: #aaa;
+}
+
+/* Estilo específico para o botão Excluir (vermelho para perigo) */
+.btn-excluir {
+    border-color: #fabbbb;
+    color: #c53030;
+}
+
+.btn-excluir:hover {
+    background-color: #fed7d7;
+    color: #9b2c2c;
+    border-color: #f59595;
+}
 .filtros input[type="text"] { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; }
 #resultados-container { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .card { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; }
