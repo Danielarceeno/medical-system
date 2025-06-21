@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Busca de Clínicas</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body>
     <header>
@@ -18,19 +19,30 @@
         <input type="text" id="filtro-especialidade" placeholder="Digite a especialidade">
         <input type="text" id="filtro-cidade" placeholder="Digite a cidade">
     </div>
-    <div class="grupo-inputs-valor">
-        <div class="filtro-valor-grupo">
-            <input type="number" id="filtro-valor-min" placeholder="Valor Mín.">
-            <span>-</span>
-            <input type="number" id="filtro-valor-max" placeholder="Valor Máx.">
-        </div>
+   <div class="grupo-inputs-valor">
+    <div class="filtro-valor-grupo">
+        <label for="filtro-valor-min">Preço entre:</label>
+        <input type="number" id="filtro-valor-min" placeholder="Mín.">
+        <span>-</span>
+        <input type="number" id="filtro-valor-max" placeholder="Máx.">
+    </div>
+
+    <div class="filtro-ordenacao-grupo">
+        <label for="seletor-ordenacao">Ordenar por:</label>
+        <select id="seletor-ordenacao">
+            <option value="padrao">Padrão</option>
+            <option value="preco-asc">Preço (menor para maior)</option>
+            <option value="preco-desc">Preço (maior para menor)</option>
+            <option value="nome-asc">Nome da Clínica (A-Z)</option>
+        </select>
+    </div>
+
+    <div class="filtros-acoes">
         <button id="btn-limpar" title="Limpar todos os filtros">Limpar Filtros</button>
+        <button id="btn-abrir-modal" class="botao-cadastrar-filtro">Cadastrar</button>
     </div>
 </section>
         <section class="cadastro-container">
-                    <form id="form-cadastro">
-                    <section class="container-botao-cadastro">
-    <button id="btn-abrir-modal" class="botao-principal-cadastro">CADASTRAR NOVO PROFISSIONAL</button>
 </section>
 
 <div id="modal-cadastro" class="modal-container">
@@ -83,8 +95,11 @@
         </section>
         <section id="resultados-container">
             </section>
+             <div id="pagination-container"></div>
     </main>
 
     <script src="script.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
 </body>
 </html>

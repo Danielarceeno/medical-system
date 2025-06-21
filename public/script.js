@@ -1,19 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- DECLARAÇÃO DE CONSTANTES (REFERÊNCIAS AOS ELEMENTOS HTML) ---
-
-    // Elementos dos Filtros
+    // --- DECLARAÇÃO DE CONSTANTES ---
     const filtroCidade = document.getElementById('filtro-cidade');
     const filtroNome = document.getElementById('filtro-nome');
     const filtroEspecialidade = document.getElementById('filtro-especialidade');
     const filtroValorMin = document.getElementById('filtro-valor-min');
     const filtroValorMax = document.getElementById('filtro-valor-max');
+    const seletorOrdenacao = document.getElementById('seletor-ordenacao');
     const btnLimpar = document.getElementById('btn-limpar');
     
-    // Container de Resultados
     const resultadosContainer = document.getElementById('resultados-container');
+    const paginationContainer = document.getElementById('pagination-container');
 
-    // Elementos do Modal de Cadastro/Edição
     const btnAbrirModal = document.getElementById('btn-abrir-modal');
     const modalCadastro = document.getElementById('modal-cadastro');
     const fecharModal = document.querySelector('.fechar-modal');
@@ -22,24 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBotaoSubmit = document.querySelector('#modal-cadastro .botao-form-submit');
     const campoHiddenEdit = document.getElementById('edit-row-index');
 
-    // Variável para armazenar todos os dados da planilha
+    // --- VARIÁVEIS DE ESTADO ---
     let dadosCompletos = [];
+    let dadosFiltrados = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
 
-    // --- FUNÇÕES PRINCIPAIS ---
+    // --- FUNÇÕES ---
 
     /**
-     * Busca os dados da API no backend e inicia a renderização.
+     * Busca todos os dados da API e inicia a aplicação.
      */
     async function buscarDados() {
         try {
-            // Lembre-se de usar a URL completa do seu serviço no Render.com quando for para produção
-            // Ex: const response = await fetch('https://seu-app.onrender.com/api/dados');
-            const response = await fetch('/api/dados'); 
-            
+            const response = await fetch('/api/dados');
             if (!response.ok) throw new Error('Falha ao carregar dados da API.');
             
             dadosCompletos = await response.json();
-            aplicarFiltros(); // Exibe todos os dados inicialmente
+            aplicarFiltros(); // Chama aplicarFiltros para renderizar o estado inicial
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
             resultadosContainer.innerHTML = '<p>Não foi possível carregar os dados. Verifique a conexão com o servidor.</p>';
@@ -47,26 +45,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Renderiza os cards na tela a partir de um array de dados.
-     * @param {Array} dados - O array de registros a serem exibidos.
+     * Renderiza os cards da PÁGINA ATUAL e os controles de paginação.
      */
-    function renderizarResultados(dados) {
+    function renderizarPagina() {
         resultadosContainer.innerHTML = '';
-        if (dados.length === 0) {
+        paginationContainer.innerHTML = '';
+
+        if (!dadosFiltrados || dadosFiltrados.length === 0) {
             resultadosContainer.innerHTML = '<p>Nenhum resultado encontrado para os filtros aplicados.</p>';
             return;
         }
 
-       // Na função renderizarResultados
-dados.forEach(item => {
-    const valorSns = parseFloat(item.valor_pela_sns) || 0;
-    const valorOriginal = parseFloat(item.valor_original) || 0;
-    const diferenca = valorOriginal - valorSns;
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const itensDaPagina = dadosFiltrados.slice(startIndex, endIndex);
 
-    const card = document.createElement('div');
-    card.className = 'card';
-    
-    card.innerHTML = `
+        itensDaPagina.forEach(item => {
+            const valorSns = parseFloat(item.valor_pela_sns) || 0;
+            const valorOriginal = parseFloat(item.valor_original) || 0;
+            const diferenca = valorOriginal - valorSns;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            card.innerHTML = `
         <div class="card-header">
             <h3>${item.nome_da_clinica}</h3>
         </div>
@@ -85,21 +87,44 @@ dados.forEach(item => {
             <span class="data-atualizacao">Atualizado em: ${item.atualizado || 'Não informado'}</span>
         </div>
     `;
-    resultadosContainer.appendChild(card);
-});
+            resultadosContainer.appendChild(card);
+        });
+
+        setupPagination();
     }
 
     /**
-     * Aplica os filtros com base nos valores dos inputs e chama a renderização.
+     * Cria e adiciona os botões de navegação da paginação.
+     */
+    function setupPagination() {
+        const pageCount = Math.ceil(dadosFiltrados.length / itemsPerPage);
+        if (pageCount <= 1) return;
+
+        for (let i = 1; i <= pageCount; i++) {
+            const btn = document.createElement('button');
+            btn.classList.add('page-btn');
+            btn.dataset.page = i;
+            btn.innerText = i;
+            if (i === currentPage) {
+                btn.classList.add('active');
+            }
+            paginationContainer.appendChild(btn);
+        }
+    }
+
+    /**
+     * Filtra e ordena os dados, reseta a página para 1 e renderiza o resultado.
      */
     function aplicarFiltros() {
+        currentPage = 1;
+
         const cidade = filtroCidade.value.trim().toLowerCase();
         const nome = filtroNome.value.trim().toLowerCase();
         const especialidade = filtroEspecialidade.value.trim().toLowerCase();
         const valorMin = parseFloat(filtroValorMin.value) || 0;
         const valorMax = parseFloat(filtroValorMax.value) || Infinity;
-
-        const dadosFiltrados = dadosCompletos.filter(item => {
+        
+        let dadosProcessados = dadosCompletos.filter(item => {
             const cidadeItem = item.cidade ? item.cidade.toLowerCase() : '';
             const medicoItem = item.nome_do_medico ? item.nome_do_medico.toLowerCase() : '';
             const clinicaItem = item.nome_da_clinica ? item.nome_da_clinica.toLowerCase() : '';
@@ -113,66 +138,72 @@ dados.forEach(item => {
             
             return matchCidade && matchNome && matchEspecialidade && matchValor;
         });
-
-        renderizarResultados(dadosFiltrados);
+        
+        const ordenacao = seletorOrdenacao.value;
+        if (ordenacao === 'preco-asc') {
+            dadosProcessados.sort((a, b) => parseFloat(a.valor_original) - parseFloat(b.valor_original));
+        } else if (ordenacao === 'preco-desc') {
+            dadosProcessados.sort((a, b) => parseFloat(b.valor_original) - parseFloat(a.valor_original));
+        } else if (ordenacao === 'nome-asc') {
+            dadosProcessados.sort((a, b) => a.nome_da_clinica.localeCompare(b.nome_da_clinica));
+        }
+        
+        dadosFiltrados = dadosProcessados;
+        renderizarPagina();
     }
     
-    /**
-     * Abre ou fecha o modal de cadastro/edição.
-     */
     function toggleModal() {
         modalCadastro.classList.toggle('ativo');
     }
 
-
     // --- LÓGICA DE EVENTOS (EVENT LISTENERS) ---
 
-    // Listeners para os campos de filtro
     filtroCidade.addEventListener('input', aplicarFiltros);
     filtroNome.addEventListener('input', aplicarFiltros);
     filtroEspecialidade.addEventListener('input', aplicarFiltros);
     filtroValorMin.addEventListener('input', aplicarFiltros);
     filtroValorMax.addEventListener('input', aplicarFiltros);
+    seletorOrdenacao.addEventListener('change', aplicarFiltros);
 
-    // Listener para o botão de limpar filtros
     btnLimpar.addEventListener('click', () => {
         filtroCidade.value = '';
         filtroNome.value = '';
         filtroEspecialidade.value = '';
         filtroValorMin.value = '';
         filtroValorMax.value = '';
+        seletorOrdenacao.value = 'padrao';
         aplicarFiltros();
     });
 
-    // Listener para o botão principal "CADASTRAR NOVO PROFISSIONAL"
     btnAbrirModal.addEventListener('click', () => {
-        formCadastro.reset(); // Limpa qualquer dado de uma edição anterior
-        campoHiddenEdit.value = ''; // Garante que estamos em modo de criação
+        formCadastro.reset();
+        campoHiddenEdit.value = '';
         modalTitulo.textContent = 'Cadastrar Novo Profissional';
         modalBotaoSubmit.textContent = 'Cadastrar';
         toggleModal();
     });
 
-    // Listeners para fechar o modal
     fecharModal.addEventListener('click', toggleModal);
     modalCadastro.addEventListener('click', (event) => {
-        if (event.target === modalCadastro) {
-            toggleModal();
+        if (event.target === modalCadastro) toggleModal();
+    });
+
+    paginationContainer.addEventListener('click', (event) => {
+        if (event.target.matches('.page-btn')) {
+            currentPage = parseInt(event.target.dataset.page);
+            renderizarPagina();
         }
     });
 
-    // Delegação de evento para os botões de EDITAR e EXCLUIR nos cards
     resultadosContainer.addEventListener('click', async (event) => {
-        const target = event.target.closest('button'); // Pega o botão mais próximo que foi clicado
+        const target = event.target.closest('button');
         if (!target) return;
 
-        // Lógica para o botão EDITAR
-        if (target.classList.contains('btn-editar')) {
-            const rowIndex = target.dataset.rowIndex;
-            const itemData = dadosCompletos.find(item => item.rowIndex == rowIndex);
+        const rowIndex = target.dataset.rowIndex;
 
+        if (target.classList.contains('btn-editar')) {
+            const itemData = dadosCompletos.find(item => item.rowIndex == rowIndex);
             if (itemData) {
-                // Preenche o formulário com os dados existentes
                 document.getElementById('cad-nome-clinica').value = itemData.nome_da_clinica;
                 document.getElementById('cad-nome-medico').value = itemData.nome_do_medico;
                 document.getElementById('cad-especialidade').value = itemData.especialidade;
@@ -180,48 +211,36 @@ dados.forEach(item => {
                 document.getElementById('cad-estado').value = itemData.estado;
                 document.getElementById('cad-valor-sns').value = parseFloat(itemData.valor_pela_sns) || '';
                 document.getElementById('cad-valor-original').value = parseFloat(itemData.valor_original) || '';
-                
                 if (itemData.atualizado && itemData.atualizado.includes('/')) {
-                    const partesData = itemData.atualizado.split('/'); // DD/MM/YYYY
-                    const dataFormatada = `${partesData[2]}-${partesData[1]}-${partesData[0]}`; // YYYY-MM-DD
+                    const partesData = itemData.atualizado.split('/');
+                    const dataFormatada = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
                     document.getElementById('cad-atualizado').value = dataFormatada;
                 } else {
-                     document.getElementById('cad-atualizado').value = itemData.atualizado || '';
+                    document.getElementById('cad-atualizado').value = itemData.atualizado || '';
                 }
-
-                // Configura o modal para o modo de edição
                 campoHiddenEdit.value = rowIndex;
                 modalTitulo.textContent = 'Editar Registro';
                 modalBotaoSubmit.textContent = 'Salvar Alterações';
                 toggleModal();
             }
-        }
-
-        // Lógica para o botão EXCLUIR
-        if (target.classList.contains('btn-excluir')) {
-            const rowIndex = target.dataset.rowIndex;
-            const confirmar = confirm('Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.');
-
-            if (confirmar) {
+        } else if (target.classList.contains('btn-excluir')) {
+            if (confirm('Tem certeza que deseja excluir este registro?')) {
                 try {
                     const response = await fetch(`/api/excluir/${rowIndex}`, { method: 'DELETE' });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error);
-                    
-                    alert(result.message);
+                    Toastify({ text: result.message, duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
                     buscarDados();
                 } catch (error) {
                     console.error('Erro ao excluir:', error);
-                    alert(`Não foi possível excluir o registro. ${error.message}`);
+                    Toastify({ text: `Não foi possível excluir: ${error.message}`, duration: 5000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
                 }
             }
         }
     });
 
-    // Listener para a SUBMISSÃO DO FORMULÁRIO (inteligente: cria ou edita)
     formCadastro.addEventListener('submit', async (event) => {
         event.preventDefault();
-
         const dadosDoForm = {
             nomeClinica: document.getElementById('cad-nome-clinica').value,
             nomeMedico: document.getElementById('cad-nome-medico').value,
@@ -232,17 +251,14 @@ dados.forEach(item => {
             valorOriginal: document.getElementById('cad-valor-original').value,
             atualizado: document.getElementById('cad-atualizado').value
         };
-
         const rowIndexToEdit = campoHiddenEdit.value;
         let url = '/api/cadastrar';
         let method = 'POST';
 
-        // Se o campo oculto tiver um valor, estamos editando. Mude a URL e o método.
         if (rowIndexToEdit) {
             url = `/api/editar/${rowIndexToEdit}`;
             method = 'PUT';
         }
-
         try {
             const response = await fetch(url, {
                 method: method,
@@ -251,17 +267,15 @@ dados.forEach(item => {
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error);
-
-            alert(result.message);
+            Toastify({ text: result.message, duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
             toggleModal();
             buscarDados();
-
         } catch (error) {
             console.error('Falha na operação:', error);
-            alert(`Erro: ${error.message}`);
+            Toastify({ text: `Erro na operação: ${error.message}`, duration: 5000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
         }
     });
-    
+
     // --- INICIA A APLICAÇÃO ---
     buscarDados();
 

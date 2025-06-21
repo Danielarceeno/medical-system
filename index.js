@@ -13,11 +13,24 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(express.json());
 
+// --- VARIÁVEIS PARA O NOSSO CACHE ---
+let cacheDeDados = null;
+let timestampDoCache = null;
+const DURACAO_DO_CACHE_EM_MINUTOS = 5;
+
+// Rota de LEITURA (GET) com lógica de cache
 app.get('/api/dados', async (req, res) => {
+    if (cacheDeDados && timestampDoCache) {
+        const idadeDoCache = (Date.now() - timestampDoCache) / 1000 / 60;
+        if (idadeDoCache < DURACAO_DO_CACHE_EM_MINUTOS) {
+            return res.json(cacheDeDados);
+        }
+    }
     try {
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
         const rows = await sheet.getRows();
+
         const data = rows.map(row => {
             const rowData = {};
             sheet.headerValues.forEach(header => {
@@ -26,6 +39,10 @@ app.get('/api/dados', async (req, res) => {
             rowData.rowIndex = row._rowNumber;
             return rowData;
         });
+        
+        cacheDeDados = data;
+        timestampDoCache = Date.now();
+
         res.json(data);
     } catch (error) {
         console.error('Erro ao buscar dados:', error);
@@ -33,6 +50,7 @@ app.get('/api/dados', async (req, res) => {
     }
 });
 
+// Rota de ESCRITA (POST) com invalidação de cache
 app.post('/api/cadastrar', async (req, res) => {
     try {
         const doc = await getDoc();
@@ -48,6 +66,11 @@ app.post('/api/cadastrar', async (req, res) => {
             especialidade: newRow.especialidade,
             atualizado: newRow.atualizado
         });
+
+        // --- INVALIDA O CACHE ---
+        cacheDeDados = null;
+        timestampDoCache = null;
+
         res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
     } catch (error) {
         console.error('Erro ao cadastrar:', error);
@@ -55,6 +78,7 @@ app.post('/api/cadastrar', async (req, res) => {
     }
 });
 
+// Rota de ATUALIZAÇÃO (PUT) com invalidação de cache
 app.put('/api/editar/:rowIndex', async (req, res) => {
     try {
         const doc = await getDoc();
@@ -74,6 +98,11 @@ app.put('/api/editar/:rowIndex', async (req, res) => {
             rowToEdit.set('valor_original', updatedData.valorOriginal);
             rowToEdit.set('atualizado', updatedData.atualizado);
             await rowToEdit.save();
+
+            // --- INVALIDA O CACHE ---
+            cacheDeDados = null;
+            timestampDoCache = null;
+
             res.status(200).json({ message: 'Registro atualizado com sucesso!' });
         } else {
             res.status(404).json({ error: 'Registro não encontrado para edição.' });
@@ -84,6 +113,7 @@ app.put('/api/editar/:rowIndex', async (req, res) => {
     }
 });
 
+// Rota de EXCLUSÃO (DELETE) com invalidação de cache
 app.delete('/api/excluir/:rowIndex', async (req, res) => {
     try {
         const doc = await getDoc();
@@ -94,6 +124,11 @@ app.delete('/api/excluir/:rowIndex', async (req, res) => {
 
         if (rowToDelete) {
             await rowToDelete.delete();
+            
+            // --- INVALIDA O CACHE ---
+            cacheDeDados = null;
+            timestampDoCache = null;
+
             res.status(200).json({ message: 'Registro excluído com sucesso!' });
         } else {
             res.status(404).json({ error: `Registro não encontrado para rowIndex: ${rowIndexToDelete}` });
@@ -104,7 +139,7 @@ app.delete('/api/excluir/:rowIndex', async (req, res) => {
     }
 });
 
-// Função de autenticação
+// Função de autenticação (sem mudanças)
 async function getDoc() {
     const serviceAccountAuth = new JWT({
         email: creds.client_email,
