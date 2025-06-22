@@ -507,3 +507,14 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
         align-self: flex-end;
     }
 }
+
+    .card {
+    /* Mantenha seus outros estilos de card (padding, etc.) */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+    /* Efeito que acontece ao passar o mouse */
+    .card:hover {
+    transform: translateY(-2.5px); /* Move o card 8 pixels para cima */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); /* Aumenta a sombra para dar profundidade */
+}
