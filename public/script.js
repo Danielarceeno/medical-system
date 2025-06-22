@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dadosCompletos = [];
     let dadosFiltrados = [];
     let currentPage = 1;
-    const itemsPerPage = 10;
+    const itemsPerPage = 9;
 
     // --- FUNÇÕES ---
 
@@ -115,42 +115,45 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Filtra e ordena os dados, reseta a página para 1 e renderiza o resultado.
      */
-    function aplicarFiltros() {
-        currentPage = 1;
+function aplicarFiltros() {
+    currentPage = 1;
 
-        const cidade = filtroCidade.value.trim().toLowerCase();
-        const nome = filtroNome.value.trim().toLowerCase();
-        const especialidade = filtroEspecialidade.value.trim().toLowerCase();
-        const valorMin = parseFloat(filtroValorMin.value) || 0;
-        const valorMax = parseFloat(filtroValorMax.value) || Infinity;
-        
-        let dadosProcessados = dadosCompletos.filter(item => {
-            const cidadeItem = item.cidade ? item.cidade.toLowerCase() : '';
-            const medicoItem = item.nome_do_medico ? item.nome_do_medico.toLowerCase() : '';
-            const clinicaItem = item.nome_da_clinica ? item.nome_da_clinica.toLowerCase() : '';
-            const especialidadeItem = item.especialidade ? item.especialidade.toLowerCase() : '';
-            const valorItem = item.valor_original ? parseFloat(item.valor_original) : 0;
+    // --- ETAPA 1: FILTRAGEM ---
+    const cidade = filtroCidade.value.trim().toLowerCase();
+    const nome = filtroNome.value.trim().toLowerCase();
+    const especialidade = filtroEspecialidade.value.trim().toLowerCase();
+    const valorMin = parseFloat(filtroValorMin.value) || 0;
+    const valorMax = parseFloat(filtroValorMax.value) || Infinity;
 
-            const matchCidade = cidade ? cidadeItem.includes(cidade) : true;
-            const matchNome = nome ? (medicoItem.includes(nome) || clinicaItem.includes(nome)) : true;
-            const matchEspecialidade = especialidade ? especialidadeItem.includes(especialidade) : true;
-            const matchValor = valorItem >= valorMin && valorItem <= valorMax;
-            
-            return matchCidade && matchNome && matchEspecialidade && matchValor;
-        });
+    let dadosProcessados = dadosCompletos.filter(item => {
+        const cidadeItem = item.cidade ? item.cidade.toLowerCase() : '';
+        const medicoItem = item.nome_do_medico ? item.nome_do_medico.toLowerCase() : '';
+        const clinicaItem = item.nome_da_clinica ? item.nome_da_clinica.toLowerCase() : '';
+        const especialidadeItem = item.especialidade ? item.especialidade.toLowerCase() : '';
         
-        const ordenacao = seletorOrdenacao.value;
-        if (ordenacao === 'preco-asc') {
-            dadosProcessados.sort((a, b) => parseFloat(a.valor_original) - parseFloat(b.valor_original));
-        } else if (ordenacao === 'preco-desc') {
-            dadosProcessados.sort((a, b) => parseFloat(b.valor_original) - parseFloat(a.valor_original));
-        } else if (ordenacao === 'nome-asc') {
-            dadosProcessados.sort((a, b) => a.nome_da_clinica.localeCompare(b.nome_da_clinica));
-        }
+        const valorItem = item.valor_pela_sns ? parseFloat(item.valor_pela_sns.replace(',', '.')) : 0;
+
+        const matchCidade = cidade ? cidadeItem.includes(cidade) : true;
+        const matchNome = nome ? (medicoItem.includes(nome) || clinicaItem.includes(nome)) : true;
+        const matchEspecialidade = especialidade ? especialidadeItem.includes(especialidade) : true;
+        const matchValor = valorItem >= valorMin && valorItem <= valorMax;
         
-        dadosFiltrados = dadosProcessados;
-        renderizarPagina();
+        return matchCidade && matchNome && matchEspecialidade && matchValor;
+    });
+
+    // --- ETAPA 2: ORDENAÇÃO ---
+    const ordenacao = seletorOrdenacao.value;
+    if (ordenacao === 'preco-asc') {
+        dadosProcessados.sort((a, b) => (parseFloat(a.valor_pela_sns.replace(',', '.')) || 0) - (parseFloat(b.valor_pela_sns.replace(',', '.')) || 0));
+    } else if (ordenacao === 'preco-desc') {
+        dadosProcessados.sort((a, b) => (parseFloat(b.valor_pela_sns.replace(',', '.')) || 0) - (parseFloat(a.valor_pela_sns.replace(',', '.')) || 0));
+    } else if (ordenacao === 'nome-asc') {
+        dadosProcessados.sort((a, b) => a.nome_da_clinica.localeCompare(b.nome_da_clinica));
     }
+    
+    dadosFiltrados = dadosProcessados;
+    renderizarPagina();
+}
     
     function toggleModal() {
         modalCadastro.classList.toggle('ativo');
