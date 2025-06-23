@@ -3,10 +3,12 @@ const { JWT } = require('google-auth-library');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const cors = require('cors');
 require('dotenv').config();
+const fetch = require('node-fetch');
 
 const PORT = process.env.PORT || 3000;
 const creds = require('./credentials.json');
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -47,6 +49,39 @@ app.get('/api/dados', async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar dados:', error);
         res.status(500).json({ error: 'Falha ao buscar dados' });
+    }
+});
+
+app.get('/api/vizinhos/:cidade/:estado', async (req, res) => {
+    const { cidade, estado } = req.params;
+
+    if (!OPENWEATHER_API_KEY) {
+        return res.status(500).json({ error: "Chave da API OpenWeatherMap não configurada no servidor." });
+    }
+
+    try {
+        // Passo 1: Obter coordenadas da cidade principal
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${cidade},${estado},BR&limit=1&appid=${OPENWEATHER_API_KEY}`;
+        const geoResponse = await fetch(geoUrl);
+        const geoData = await geoResponse.json();
+
+        if (!geoData || geoData.length === 0) {
+            throw new Error('Não foi possível encontrar as coordenadas da cidade.');
+        }
+
+        const { lat, lon } = geoData[0];
+
+        // Passo 2: Encontrar cidades próximas usando o endpoint 'find'
+        const neighborsUrl = `https://api.openweathermap.org/data/2.5/find?lat=${lat}&lon=${lon}&cnt=15&units=metric&appid=${OPENWEATHER_API_KEY}`;
+        const neighborsResponse = await fetch(neighborsUrl);
+        const neighborsData = await neighborsResponse.json();
+        
+        // Retorna os dados brutos para o frontend processar
+        res.json(neighborsData);
+
+    } catch (error) {
+        console.error("Erro no servidor ao buscar cidades vizinhas:", error);
+        res.status(500).json({ error: `Falha ao buscar vizinhos: ${error.message}` });
     }
 });
 
@@ -150,8 +185,9 @@ async function getDoc() {
     await doc.loadInfo();
     return doc;
 }
-
-// Iniciar o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
+    if (!OPENWEATHER_API_KEY) {
+        console.warn("AVISO: Chave da API OpenWeatherMap não encontrada. A busca por cidades vizinhas não funcionará.");
+    }
 });
