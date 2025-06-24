@@ -82,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const localCompleto = [item.cidade, item.estado].filter(Boolean).join(' - ');
             const htmlLocal = localCompleto ? `<p><i class="fas fa-map-marker-alt"></i> ${localCompleto}</p>` : '';
             const htmlPrecoSns = !isNaN(valorSns) && valorSns > 0 ? `<p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>` : '';
-    
+            const htmlPrecoOriginal = !isNaN(valorOriginal) && valorOriginal > 0 ? `<p class="preco-original">Valor Original: R$ ${valorOriginal.toFixed(2).replace('.', ',')}</p>` : '';
+            const htmlEconomia = !isNaN(valorOriginal) && !isNaN(valorSns) && valorOriginal > valorSns ? `<p class="economia"><strong>Sua economia: R$ ${(valorOriginal - valorSns).toFixed(2).replace('.', ',')}</strong></p>` : '';
+
             const card = document.createElement('div');
             card.className = 'card';
             if (item.cidade) card.dataset.cidade = item.cidade;
@@ -92,27 +94,29 @@ document.addEventListener('DOMContentLoaded', () => {
     
             // Monta o card com o ícone de hospital no título
             card.innerHTML = `
-                <div class="card-header">
-                    <h3><i class="fas fa-hospital"></i> ${item.nome_da_clinica}</h3>
+            <div class="card-header">
+                <h3><i class="fas fa-hospital"></i> ${item.nome_da_clinica}</h3>
+            </div>
+            ${htmlMedico}
+            ${htmlEspecialidade}
+            ${htmlLocal}
+            ${(htmlPrecoOriginal || htmlPrecoSns) ? '<hr>' : ''}
+            ${htmlPrecoOriginal}
+            ${htmlPrecoSns}
+            ${htmlEconomia}
+            <div class="card-footer">
+                <div class="botoes-acao">
+                    <button class="btn-editar">✏️ Editar</button>
+                    <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
                 </div>
-                ${htmlMedico}
-                ${htmlEspecialidade}
-                ${htmlLocal}
-                ${htmlPrecoSns ? '<hr>' : ''}
-                ${htmlPrecoSns}
-                <div class="card-footer">
-                    <div class="botoes-acao">
-                        <button class="btn-editar">✏️ Editar</button>
-                        <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
-                    </div>
-                    ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
-                </div>
-            `;
-            resultadosContainer.appendChild(card);
-        });
-    
-        setupPagination();
-    }
+                ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
+            </div>
+        `;
+        resultadosContainer.appendChild(card);
+    });
+
+    setupPagination();
+}
 
     function setupPagination() {
         const pageCount = Math.ceil(dadosFiltrados.length / itemsPerPage);

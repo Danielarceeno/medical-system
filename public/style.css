@@ -346,7 +346,11 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
 .card h3 { margin-top: 0; color: #4A90E2; }
 .card p { margin: 0.5rem 0; }
 .card .preco-sns { font-weight: bold; font-size: 1.2rem; color: #34A853; }
-.card .preco-original { text-decoration: line-through; color: #999; }
+.card .preco-original {
+    text-decoration: line-through; /* Risca o preço antigo */
+    color: #999; /* Cor mais suave */
+    font-size: 0.9rem;
+}
 .card.destaque-cidade { border: 2px solid #FBC02D; } /* Destaque para a cidade principal */
 .card.vizinha { border: 2px dashed #7B1FA2; } /* Destaque para cidades vizinhas */
 .economia {
