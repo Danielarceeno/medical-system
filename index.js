@@ -18,8 +18,7 @@ app.use(express.json());
 // --- VARIÁVEIS PARA O NOSSO CACHE ---
 let cacheDeDados = null;
 let timestampDoCache = null;
-const DURACAO_DO_CACHE_EM_MINUTOS = 5;
-
+const DURACAO_DO_CACHE_EM_MINUTOS = 0.3; 
 // Rota de LEITURA (GET) com lógica de cache
 app.get('/api/dados', async (req, res) => {
     if (cacheDeDados && timestampDoCache) {

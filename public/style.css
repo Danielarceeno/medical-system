@@ -605,8 +605,9 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
 /* --- Destaque para o card selecionado --- */
 .card.selecionado {
     border-color: var(--azul-escuro);
-    box-shadow: 0 6px 15px rgba(74, 105, 226, 0.2);
+    box-shadow: 0 8px 20px rgba(74, 105, 226, 0.2);
     transform: translateY(-5px);
+    border-left: 4px solid var(--azul-escuro); 
 }
 
 /* --- Responsividade --- */

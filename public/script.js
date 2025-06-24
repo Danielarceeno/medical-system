@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     function renderizarPagina() {
         resultadosContainer.innerHTML = '';
         paginationContainer.innerHTML = '';
@@ -58,33 +59,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const itensDaPagina = dadosFiltrados.slice(startIndex, endIndex);
 
         itensDaPagina.forEach(item => {
-            const valorSns = parseFloat(item.valor_pela_sns) || 0;
-            const valorOriginal = parseFloat(item.valor_original) || 0;
-            const diferenca = valorOriginal - valorSns;
+            const valorSns = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
+            const valorOriginal = parseFloat(String(item.valor_original).replace(',', '.'));
+            
+            const htmlMedico = item.nome_do_medico ? `<p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>` : '';
+            const htmlEspecialidade = item.especialidade ? `<p><strong>Especialidade:</strong> ${item.especialidade}</p>` : '';
+            
+            const localCompleto = [item.cidade, item.estado].filter(Boolean).join(' - ');
+            const htmlLocal = localCompleto ? `<p><strong>Local:</strong> ${localCompleto}</p>` : '';
 
+            let htmlPrecoOriginal = '';
+            if (!isNaN(valorOriginal) && valorOriginal > 0) {
+                htmlPrecoOriginal = `<p class="preco-original">Valor Original: R$ ${valorOriginal.toFixed(2).replace('.', ',')}</p>`;
+            }
+
+            let htmlPrecoSns = '';
+            if (!isNaN(valorSns) && valorSns > 0) {
+                htmlPrecoSns = `<p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>`;
+            }
+            
+            let htmlEconomia = '';
+            if (!isNaN(valorOriginal) && !isNaN(valorSns) && valorOriginal > valorSns) {
+                const diferenca = valorOriginal - valorSns;
+                htmlEconomia = `<p class="economia"><strong>Sua economia: R$ ${diferenca.toFixed(2).replace('.', ',')}</strong></p>`;
+            }
+            
+            const htmlAtualizado = item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : '';
+            
             const card = document.createElement('div');
             card.className = 'card';
-            card.dataset.cidade = item.cidade;
-            card.dataset.estado = item.estado;
+            if (item.cidade) card.dataset.cidade = item.cidade;
+            if (item.estado) card.dataset.estado = item.estado;
+            // --- MUDANÇA AQUI: Adiciona a especialidade aos dados do card ---
+            if (item.especialidade) card.dataset.especialidade = item.especialidade;
             card.dataset.rowIndex = item.rowIndex;
 
             card.innerHTML = `
                 <div class="card-header">
                     <h3>${item.nome_da_clinica}</h3>
                 </div>
-                <p><strong>Médico(a):</strong> ${item.nome_do_medico || 'Não informado'}</p>
-                <p><strong>Especialidade:</strong> ${item.especialidade || 'Não informado'}</p>
-                <p><strong>Local:</strong> ${item.cidade || 'Não informado'} - ${item.estado || ''}</p>
-                <hr>
-                <p class="preco-original">Valor Original: R$ ${valorOriginal.toFixed(2).replace('.', ',')}</p>
-                <p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>
-                <p class="economia"><strong>Sua economia: R$ ${diferenca.toFixed(2).replace('.', ',')}</strong></p>
+                ${htmlMedico}
+                ${htmlEspecialidade}
+                ${htmlLocal}
+                ${(htmlPrecoOriginal || htmlPrecoSns) ? '<hr>' : ''}
+                ${htmlPrecoOriginal}
+                ${htmlPrecoSns}
+                ${htmlEconomia}
                 <div class="card-footer">
                     <div class="botoes-acao">
                         <button class="btn-editar">✏️ Editar</button>
                         <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
                     </div>
-                    <span class="data-atualizacao">Atualizado em: ${item.atualizado || 'Não informado'}</span>
+                    ${htmlAtualizado}
                 </div>
             `;
             resultadosContainer.appendChild(card);
@@ -123,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const medicoItem = item.nome_do_medico ? item.nome_do_medico.toLowerCase() : '';
             const clinicaItem = item.nome_da_clinica ? item.nome_da_clinica.toLowerCase() : '';
             const especialidadeItem = item.especialidade ? item.especialidade.toLowerCase() : '';
-            const valorItem = item.valor_pela_sns ? parseFloat(item.valor_pela_sns.replace(',', '.')) : 0;
+            const valorItem = item.valor_pela_sns ? parseFloat(String(item.valor_pela_sns).replace(',', '.')) : 0;
             const matchCidade = cidade ? cidadeItem.includes(cidade) : true;
             const matchNome = nome ? (medicoItem.includes(nome) || clinicaItem.includes(nome)) : true;
             const matchEspecialidade = especialidade ? especialidadeItem.includes(especialidade) : true;
@@ -133,9 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const ordenacao = seletorOrdenacao.value;
         if (ordenacao === 'preco-asc') {
-            dadosProcessados.sort((a, b) => (parseFloat(a.valor_pela_sns.replace(',', '.')) || 0) - (parseFloat(b.valor_pela_sns.replace(',', '.')) || 0));
+            dadosProcessados.sort((a, b) => (parseFloat(String(a.valor_pela_sns).replace(',', '.')) || 0) - (parseFloat(String(b.valor_pela_sns).replace(',', '.')) || 0));
         } else if (ordenacao === 'preco-desc') {
-            dadosProcessados.sort((a, b) => (parseFloat(b.valor_pela_sns.replace(',', '.')) || 0) - (parseFloat(a.valor_pela_sns.replace(',', '.')) || 0));
+            dadosProcessados.sort((a, b) => (parseFloat(String(b.valor_pela_sns).replace(',', '.')) || 0) - (parseFloat(String(a.valor_pela_sns).replace(',', '.')) || 0));
         } else if (ordenacao === 'nome-asc') {
             dadosProcessados.sort((a, b) => a.nome_da_clinica.localeCompare(b.nome_da_clinica));
         }
@@ -144,9 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarPagina();
     }
 
-    // --- NOVAS FUNÇÕES PARA COMPARAÇÃO (USANDO OPENWEATHERMAP) ---
-
-    function renderizarPlaceholderComparacao(mensagem = 'Clique em um card para ver preços em cidades vizinhas.') {
+    function renderizarPlaceholderComparacao(mensagem = 'Clique em um card para ver preços de especialistas iguais em cidades vizinhas.') {
         comparacaoContainer.innerHTML = `
             <div class="info-placeholder">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -157,23 +181,22 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
     
-    async function buscarPrecosVizinhos(cidade, estado) {
-        if (!cidade || !estado) return;
+    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
+    async function buscarPrecosVizinhos(cidade, estado, especialidade) {
+        if (!cidade || !estado || !especialidade) return;
         
         comparacaoContainer.innerHTML = '<p>Buscando cidades vizinhas...</p>';
 
         try {
-            // Passo Único: Chamar nossa própria API de backend
             const response = await fetch(`/api/vizinhos/${cidade}/${estado}`);
             const neighborsData = await response.json();
 
             if (!response.ok) {
-                // Se a resposta do nosso servidor não for OK, lança um erro com a mensagem do servidor
                 throw new Error(neighborsData.error || 'Erro do servidor');
             }
 
             if (!neighborsData.list || neighborsData.list.length === 0) {
-                renderizarResultadosVizinhos([], cidade);
+                renderizarResultadosVizinhos([], cidade, especialidade);
                 return;
             }
             
@@ -183,11 +206,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             const nomesUnicos = [...new Set(nomesCidadesVizinhas)];
 
+            // --- MUDANÇA AQUI: Filtra também pela especialidade ---
             const resultadosVizinhos = dadosCompletos.filter(item => 
-                item.cidade && nomesUnicos.includes(item.cidade.toLowerCase())
+                item.cidade && 
+                nomesUnicos.includes(item.cidade.toLowerCase()) &&
+                item.especialidade &&
+                item.especialidade.toLowerCase() === especialidade.toLowerCase()
             );
 
-            renderizarResultadosVizinhos(resultadosVizinhos, cidade);
+            renderizarResultadosVizinhos(resultadosVizinhos, cidade, especialidade);
 
         } catch (error) {
             console.error("Erro ao buscar cidades vizinhas:", error);
@@ -195,84 +222,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function renderizarResultadosVizinhos(resultados, cidadeOriginal) {
-        let html = `<h3>Melhor valor nas cidades próximas</h3>`;
+    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
+    function renderizarResultadosVizinhos(resultados, cidadeOriginal, especialidade) {
+        // --- MUDANÇA AQUI: Título dinâmico com a especialidade ---
+        let html = `<h3>Melhor valor para ${especialidade} nas cidades próximas</h3>`;
     
-        // 1. Filtra para ter apenas resultados com nome de médico
-        const resultadosComMedico = resultados.filter(item => item.nome_do_medico && item.nome_do_medico.trim() !== '');
+        const resultadosCompletos = resultados.filter(item => 
+            item.nome_do_medico && item.nome_do_medico.trim() !== '' && 
+            item.valor_pela_sns && parseFloat(String(item.valor_pela_sns).replace(',', '.')) > 0
+        );
     
-        // 2. Agrupa por cidade e encontra a opção mais barata de cada uma
         const melhoresOpcoesPorCidade = new Map();
-        resultadosComMedico.forEach(item => {
+        resultadosCompletos.forEach(item => {
             const cidade = item.cidade;
-            const precoAtual = parseFloat(item.valor_pela_sns) || Infinity;
-            if (!melhoresOpcoesPorCidade.has(cidade) || precoAtual < (parseFloat(melhoresOpcoesPorCidade.get(cidade).valor_pela_sns) || Infinity)) {
+            const precoAtual = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
+            if (!melhoresOpcoesPorCidade.has(cidade) || precoAtual < parseFloat(String(melhoresOpcoesPorCidade.get(cidade).valor_pela_sns).replace(',', '.'))) {
                 melhoresOpcoesPorCidade.set(cidade, item);
             }
         });
     
         const listaFinal = Array.from(melhoresOpcoesPorCidade.values());
     
-        // 3. ▼▼▼ LÓGICA NOVA: Encontra a opção mais barata de TODAS na lista final para destacar ▼▼▼
         let campeaGeral = null;
         if (listaFinal.length > 0) {
             campeaGeral = listaFinal.reduce((maisBarata, itemAtual) => {
-                const precoMaisBarato = parseFloat(maisBarata.valor_pela_sns) || Infinity;
-                const precoAtual = parseFloat(itemAtual.valor_pela_sns) || Infinity;
-                return precoAtual < precoMaisBarato ? itemAtual : maisBarata;
+                return parseFloat(String(itemAtual.valor_pela_sns).replace(',', '.')) < parseFloat(String(maisBarata.valor_pela_sns).replace(',', '.')) ? itemAtual : maisBarata;
             });
         }
     
         if (listaFinal.length > 0) {
-            // Ordena a lista pelo nome da cidade para exibição consistente
             listaFinal.sort((a, b) => a.cidade.localeCompare(b.cidade));
             
-            // Renderiza um card para cada opção da lista
             listaFinal.forEach(melhorOpcao => {
-                const valorSns = parseFloat(melhorOpcao.valor_pela_sns) || 0;
-                
-                // ▼▼▼ LÓGICA NOVA: Adiciona a classe de destaque se o item atual for a "campeã geral" ▼▼▼
+                const valorSns = parseFloat(String(melhorOpcao.valor_pela_sns).replace(',', '.')) || 0;
                 const classeDestaque = (campeaGeral && melhorOpcao.rowIndex === campeaGeral.rowIndex) ? 'destaque-melhor-opcao' : '';
     
                 html += `
                     <div class="card-comparacao ${classeDestaque}">
                         <p class="local-vizinho">${melhorOpcao.nome_da_clinica} - <strong>${melhorOpcao.cidade}</strong></p>
                         <p><strong>Médico(a):</strong> ${melhorOpcao.nome_do_medico}</p>
-                        <p>${melhorOpcao.especialidade}</p>
                         <p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>
                     </div>
                 `;
             });
     
         } else {
-            html += '<p>Nenhum profissional foi encontrado nas cidades vizinhas para comparação.</p>';
+            html += `<p>Nenhum profissional de ${especialidade} foi encontrado nas cidades vizinhas para comparação.</p>`;
         }
     
         comparacaoContainer.innerHTML = html;
     }
-    // --- LÓGICA DE EVENTOS (EVENT LISTENERS) ---
+    
+    document.addEventListener('click', (event) => {
+        const cliqueDentroDosResultados = event.target.closest('.resultados-wrapper');
+        const cliqueDentroDaComparacao = event.target.closest('#comparacao-vizinhos-container');
 
-    // Listener para fechar o painel de comparação ao clicar fora
-document.addEventListener('click', (event) => {
-    // Verifica se o elemento clicado (ou um de seus pais) é um dos nossos containers principais
-    const cliqueDentroDosResultados = event.target.closest('.resultados-wrapper');
-    const cliqueDentroDaComparacao = event.target.closest('#comparacao-vizinhos-container');
-
-    // Se o clique NÃO foi dentro da área dos resultados e NEM dentro do painel de comparação...
-    if (!cliqueDentroDosResultados && !cliqueDentroDaComparacao) {
-        
-        // 1. Esconde o painel de comparação
-        comparacaoContainer.classList.remove('visivel');
-
-        // 2. Bônus: Remove a seleção do card que estava destacado
-        const cardSelecionado = document.querySelector('.card.selecionado');
-        if (cardSelecionado) {
-            cardSelecionado.classList.remove('selecionado');
+        if (!cliqueDentroDosResultados && !cliqueDentroDaComparacao) {
+            comparacaoContainer.classList.remove('visivel');
+            const cardSelecionado = document.querySelector('.card.selecionado');
+            if (cardSelecionado) {
+                cardSelecionado.classList.remove('selecionado');
+            }
         }
-    }
-});
+    });
 
-    // Adicionando listeners aos filtros
     ['input', 'change'].forEach(evento => {
         filtroCidade.addEventListener(evento, aplicarFiltros);
         filtroNome.addEventListener(evento, aplicarFiltros);
@@ -282,25 +295,26 @@ document.addEventListener('click', (event) => {
         seletorOrdenacao.addEventListener(evento, aplicarFiltros);
     });
 
-    // Listener de clique no container de resultados
+    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     resultadosContainer.addEventListener('click', async (event) => {
         const card = event.target.closest('.card');
         if (!card) return;
 
         const targetButton = event.target.closest('button');
         if (targetButton) {
-            // Lógica de editar/excluir
             const rowIndex = card.dataset.rowIndex;
             if (targetButton.classList.contains('btn-editar')) {
                 const itemData = dadosCompletos.find(item => item.rowIndex == rowIndex);
                 if (itemData) {
-                    document.getElementById('cad-nome-clinica').value = itemData.nome_da_clinica;
-                    document.getElementById('cad-nome-medico').value = itemData.nome_do_medico;
-                    document.getElementById('cad-especialidade').value = itemData.especialidade;
-                    document.getElementById('cad-cidade').value = itemData.cidade;
-                    document.getElementById('cad-estado').value = itemData.estado;
-                    document.getElementById('cad-valor-sns').value = parseFloat(itemData.valor_pela_sns) || '';
-                    document.getElementById('cad-valor-original').value = parseFloat(itemData.valor_original) || '';
+                    document.getElementById('cad-nome-clinica').value = itemData.nome_da_clinica || '';
+                    document.getElementById('cad-nome-medico').value = itemData.nome_do_medico || '';
+                    document.getElementById('cad-especialidade').value = itemData.especialidade || '';
+                    document.getElementById('cad-cidade').value = itemData.cidade || '';
+                    document.getElementById('cad-estado').value = itemData.estado || '';
+                    const valorSnsFormatado = itemData.valor_pela_sns ? String(itemData.valor_pela_sns).replace(',', '.') : '';
+                    const valorOriginalFormatado = itemData.valor_original ? String(itemData.valor_original).replace(',', '.') : '';
+                    document.getElementById('cad-valor-sns').value = valorSnsFormatado;
+                    document.getElementById('cad-valor-original').value = valorOriginalFormatado;
                     if (itemData.atualizado && itemData.atualizado.includes('/')) {
                         const partesData = itemData.atualizado.split('/');
                         document.getElementById('cad-atualizado').value = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
@@ -327,19 +341,23 @@ document.addEventListener('click', (event) => {
                 }
             }
         } else {
-            // LÓGICA NOVA: Clique no card para ver vizinhos
-        document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
-        card.classList.add('selecionado');
-        
-        // Adicione esta linha para MOSTRAR o painel
-        comparacaoContainer.classList.add('visivel');
+            // Lógica para comparação
+            document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
+            card.classList.add('selecionado');
+            comparacaoContainer.classList.add('visivel');
 
-        const cidade = card.dataset.cidade.trim();
-        const estado = card.dataset.estado.trim();
-        buscarPrecosVizinhos(cidade, estado);
-    }
-});
-
+            // --- MUDANÇA AQUI: Pega a especialidade e passa para a função de busca ---
+            const cidade = card.dataset.cidade ? card.dataset.cidade.trim() : null;
+            const estado = card.dataset.estado ? card.dataset.estado.trim() : null;
+            const especialidade = card.dataset.especialidade ? card.dataset.especialidade.trim() : null;
+            
+            if (cidade && estado && especialidade) {
+                buscarPrecosVizinhos(cidade, estado, especialidade);
+            } else {
+                renderizarPlaceholderComparacao('Card sem cidade, estado ou especialidade para poder comparar.');
+            }
+        }
+    });
     
     function toggleModal() {
         modalCadastro.classList.toggle('ativo');
