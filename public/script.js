@@ -44,78 +44,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     function renderizarPagina() {
+        const resultadosHeader = document.querySelector('.resultados-header'); // Pega o novo elemento do cabeçalho
+        const totalResultados = dadosFiltrados.length;
+    
+        // --- 1. ATUALIZA O CABEÇALHO DE RESULTADOS ---
+        if (resultadosHeader) {
+            const textoContador = totalResultados === 1 ? 'médico encontrado' : 'médicos encontrados';
+            resultadosHeader.innerHTML = `
+                <h2><i class="fas fa-list-ul"></i> Resultados da Busca</h2>
+                <span class="contador-resultados">${totalResultados} ${textoContador}</span>
+            `;
+        }
+    
+        // Limpa os containers
         resultadosContainer.innerHTML = '';
         paginationContainer.innerHTML = '';
-
-        if (!dadosFiltrados || dadosFiltrados.length === 0) {
+    
+        if (totalResultados === 0) {
             resultadosContainer.innerHTML = '<p>Nenhum resultado encontrado para os filtros aplicados.</p>';
+            // Esconde o contador se não houver resultados
+            if(resultadosHeader) document.querySelector('.contador-resultados').style.display = 'none';
             return;
         }
-
+    
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const itensDaPagina = dadosFiltrados.slice(startIndex, endIndex);
-
+    
         itensDaPagina.forEach(item => {
             const valorSns = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
             const valorOriginal = parseFloat(String(item.valor_original).replace(',', '.'));
             
-            const htmlMedico = item.nome_do_medico ? `<p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>` : '';
-            const htmlEspecialidade = item.especialidade ? `<p><strong>Especialidade:</strong> ${item.especialidade}</p>` : '';
-            
+            // --- 2. MONTA O HTML DO CARD COM O NOVO LAYOUT DE ÍCONES ---
+            const htmlMedico = item.nome_do_medico ? `<p><i class="fas fa-user-doctor"></i> ${item.nome_do_medico}</p>` : '';
+            const htmlEspecialidade = item.especialidade ? `<p><i class="fas fa-stethoscope"></i> ${item.especialidade}</p>` : '';
             const localCompleto = [item.cidade, item.estado].filter(Boolean).join(' - ');
-            const htmlLocal = localCompleto ? `<p><strong>Local:</strong> ${localCompleto}</p>` : '';
-
-            let htmlPrecoOriginal = '';
-            if (!isNaN(valorOriginal) && valorOriginal > 0) {
-                htmlPrecoOriginal = `<p class="preco-original">Valor Original: R$ ${valorOriginal.toFixed(2).replace('.', ',')}</p>`;
-            }
-
-            let htmlPrecoSns = '';
-            if (!isNaN(valorSns) && valorSns > 0) {
-                htmlPrecoSns = `<p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>`;
-            }
-            
-            let htmlEconomia = '';
-            if (!isNaN(valorOriginal) && !isNaN(valorSns) && valorOriginal > valorSns) {
-                const diferenca = valorOriginal - valorSns;
-                htmlEconomia = `<p class="economia"><strong>Sua economia: R$ ${diferenca.toFixed(2).replace('.', ',')}</strong></p>`;
-            }
-            
-            const htmlAtualizado = item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : '';
-            
+            const htmlLocal = localCompleto ? `<p><i class="fas fa-map-marker-alt"></i> ${localCompleto}</p>` : '';
+            const htmlPrecoSns = !isNaN(valorSns) && valorSns > 0 ? `<p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>` : '';
+    
             const card = document.createElement('div');
             card.className = 'card';
             if (item.cidade) card.dataset.cidade = item.cidade;
             if (item.estado) card.dataset.estado = item.estado;
-            // --- MUDANÇA AQUI: Adiciona a especialidade aos dados do card ---
             if (item.especialidade) card.dataset.especialidade = item.especialidade;
             card.dataset.rowIndex = item.rowIndex;
-
+    
+            // Monta o card com o ícone de hospital no título
             card.innerHTML = `
                 <div class="card-header">
-                    <h3>${item.nome_da_clinica}</h3>
+                    <h3><i class="fas fa-hospital"></i> ${item.nome_da_clinica}</h3>
                 </div>
                 ${htmlMedico}
                 ${htmlEspecialidade}
                 ${htmlLocal}
-                ${(htmlPrecoOriginal || htmlPrecoSns) ? '<hr>' : ''}
-                ${htmlPrecoOriginal}
+                ${htmlPrecoSns ? '<hr>' : ''}
                 ${htmlPrecoSns}
-                ${htmlEconomia}
                 <div class="card-footer">
                     <div class="botoes-acao">
                         <button class="btn-editar">✏️ Editar</button>
                         <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
                     </div>
-                    ${htmlAtualizado}
+                    ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
                 </div>
             `;
             resultadosContainer.appendChild(card);
         });
-
+    
         setupPagination();
     }
 
@@ -222,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     function renderizarResultadosVizinhos(resultados, cidadeOriginal, especialidade) {
         // --- MUDANÇA AQUI: Título dinâmico com a especialidade ---
         let html = `<h3>Melhor valor para ${especialidade} nas cidades próximas</h3>`;

@@ -637,3 +637,34 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
     border-left: 4px solid #4CAF50; /* Uma borda de destaque verde */
     padding: 1.2rem;
 }
+
+.resultados-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.resultados-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--cinza-texto);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaço entre o ícone e o texto */
+}
+
+.resultados-header h2 i {
+    color: var(--azul-escuro);
+}
+
+.contador-resultados {
+    background-color: var(--azul-claro);
+    color: var(--azul-escuro);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
