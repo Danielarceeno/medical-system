@@ -1,20 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     // --- DECLARAÇÃO DE CONSTANTES ---
+    const filtroNome = document.getElementById('nome');
+    const filtroEspecialidade = document.getElementById('especialidade');
+    const filtroCidade = document.getElementById('cidade');
+    const filtroValorMin = document.getElementById('valor-min');
+    const filtroValorMax = document.getElementById('valor-max');
+    const seletorOrdenacao = document.getElementById('ordenar');
+    const btnLimpar = document.querySelector('.btn-limpar');
+    const btnCadastrar = document.querySelector('.btn-cadastrar');
 
-    const filtroCidade = document.getElementById('filtro-cidade');
-    const filtroNome = document.getElementById('filtro-nome');
-    const filtroEspecialidade = document.getElementById('filtro-especialidade');
-    const filtroValorMin = document.getElementById('filtro-valor-min');
-    const filtroValorMax = document.getElementById('filtro-valor-max');
-    const seletorOrdenacao = document.getElementById('seletor-ordenacao');
-    const btnLimpar = document.getElementById('btn-limpar');
-    
     const resultadosContainer = document.getElementById('resultados-container');
     const paginationContainer = document.getElementById('pagination-container');
     const comparacaoContainer = document.getElementById('comparacao-vizinhos-container');
 
-    const btnAbrirModal = document.getElementById('btn-abrir-modal');
     const modalCadastro = document.getElementById('modal-cadastro');
     const fecharModal = document.querySelector('.fechar-modal');
     const formCadastro = document.getElementById('form-cadastro');
@@ -29,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemsPerPage = 9;
 
     // --- FUNÇÕES ---
-
     async function buscarDados() {
         try {
             const response = await fetch('/api/dados');
@@ -45,10 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderizarPagina() {
-        const resultadosHeader = document.querySelector('.resultados-header'); // Pega o novo elemento do cabeçalho
+        const resultadosHeader = document.querySelector('.resultados-header');
         const totalResultados = dadosFiltrados.length;
     
-        // --- 1. ATUALIZA O CABEÇALHO DE RESULTADOS ---
         if (resultadosHeader) {
             const textoContador = totalResultados === 1 ? 'médico encontrado' : 'médicos encontrados';
             resultadosHeader.innerHTML = `
@@ -57,14 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
     
-        // Limpa os containers
         resultadosContainer.innerHTML = '';
         paginationContainer.innerHTML = '';
     
         if (totalResultados === 0) {
             resultadosContainer.innerHTML = '<p>Nenhum resultado encontrado para os filtros aplicados.</p>';
-            // Esconde o contador se não houver resultados
-            if(resultadosHeader) document.querySelector('.contador-resultados').style.display = 'none';
+            if (resultadosHeader) document.querySelector('.contador-resultados').style.display = 'none';
             return;
         }
     
@@ -76,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const valorSns = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
             const valorOriginal = parseFloat(String(item.valor_original).replace(',', '.'));
             
-            // --- 2. MONTA O HTML DO CARD COM O NOVO LAYOUT DE ÍCONES ---
             const htmlMedico = item.nome_do_medico ? `<p><i class="fas fa-user-doctor"></i> ${item.nome_do_medico}</p>` : '';
             const htmlEspecialidade = item.especialidade ? `<p><i class="fas fa-stethoscope"></i> ${item.especialidade}</p>` : '';
             const localCompleto = [item.cidade, item.estado].filter(Boolean).join(' - ');
@@ -92,31 +85,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.especialidade) card.dataset.especialidade = item.especialidade;
             card.dataset.rowIndex = item.rowIndex;
     
-            // Monta o card com o ícone de hospital no título
             card.innerHTML = `
-            <div class="card-header">
-                <h3><i class="fas fa-hospital"></i> ${item.nome_da_clinica}</h3>
-            </div>
-            ${htmlMedico}
-            ${htmlEspecialidade}
-            ${htmlLocal}
-            ${(htmlPrecoOriginal || htmlPrecoSns) ? '<hr>' : ''}
-            ${htmlPrecoOriginal}
-            ${htmlPrecoSns}
-            ${htmlEconomia}
-            <div class="card-footer">
-                <div class="botoes-acao">
-                    <button class="btn-editar">✏️ Editar</button>
-                    <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
+                <div class="card-header">
+                    <h3><i class="fas fa-hospital"></i> ${item.nome_da_clinica}</h3>
                 </div>
-                ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
-            </div>
-        `;
-        resultadosContainer.appendChild(card);
-    });
+                ${htmlMedico}
+                ${htmlEspecialidade}
+                ${htmlLocal}
+                ${(htmlPrecoOriginal || htmlPrecoSns) ? '<hr>' : ''}
+                ${htmlPrecoOriginal}
+                ${htmlPrecoSns}
+                ${htmlEconomia}
+                <div class="card-footer">
+                    <div class="botoes-acao">
+                        <button class="btn-editar">✏️ Editar</button>
+                        <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
+                    </div>
+                    ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
+                </div>
+            `;
+            resultadosContainer.appendChild(card);
+        });
 
-    setupPagination();
-}
+        setupPagination();
+    }
 
     function setupPagination() {
         const pageCount = Math.ceil(dadosFiltrados.length / itemsPerPage);
@@ -157,12 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const ordenacao = seletorOrdenacao.value;
-        if (ordenacao === 'preco-asc') {
+        if (ordenacao === 'preco-menor') {
             dadosProcessados.sort((a, b) => (parseFloat(String(a.valor_pela_sns).replace(',', '.')) || 0) - (parseFloat(String(b.valor_pela_sns).replace(',', '.')) || 0));
-        } else if (ordenacao === 'preco-desc') {
+        } else if (ordenacao === 'preco-maior') {
             dadosProcessados.sort((a, b) => (parseFloat(String(b.valor_pela_sns).replace(',', '.')) || 0) - (parseFloat(String(a.valor_pela_sns).replace(',', '.')) || 0));
-        } else if (ordenacao === 'nome-asc') {
-            dadosProcessados.sort((a, b) => a.nome_da_clinica.localeCompare(b.nome_da_clinica));
+        } else if (ordenacao === 'padrao') {
+            // No sorting for default
         }
         
         dadosFiltrados = dadosProcessados;
@@ -180,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
     
-    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     async function buscarPrecosVizinhos(cidade, estado, especialidade) {
         if (!cidade || !estado || !especialidade) return;
         
@@ -205,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             const nomesUnicos = [...new Set(nomesCidadesVizinhas)];
 
-            // --- MUDANÇA AQUI: Filtra também pela especialidade ---
             const resultadosVizinhos = dadosCompletos.filter(item => 
                 item.cidade && 
                 nomesUnicos.includes(item.cidade.toLowerCase()) &&
@@ -222,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderizarResultadosVizinhos(resultados, cidadeOriginal, especialidade) {
-        // --- MUDANÇA AQUI: Título dinâmico com a especialidade ---
         let html = `<h3>Melhor valor para ${especialidade} nas cidades próximas</h3>`;
     
         const resultadosCompletos = resultados.filter(item => 
@@ -285,15 +274,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ['input', 'change'].forEach(evento => {
-        filtroCidade.addEventListener(evento, aplicarFiltros);
         filtroNome.addEventListener(evento, aplicarFiltros);
         filtroEspecialidade.addEventListener(evento, aplicarFiltros);
+        filtroCidade.addEventListener(evento, aplicarFiltros);
         filtroValorMin.addEventListener(evento, aplicarFiltros);
         filtroValorMax.addEventListener(evento, aplicarFiltros);
         seletorOrdenacao.addEventListener(evento, aplicarFiltros);
     });
 
-    // ▼▼▼ FUNÇÃO ATUALIZADA ▼▼▼
     resultadosContainer.addEventListener('click', async (event) => {
         const card = event.target.closest('.card');
         if (!card) return;
@@ -339,12 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } else {
-            // Lógica para comparação
             document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
             card.classList.add('selecionado');
             comparacaoContainer.classList.add('visivel');
 
-            // --- MUDANÇA AQUI: Pega a especialidade e passa para a função de busca ---
             const cidade = card.dataset.cidade ? card.dataset.cidade.trim() : null;
             const estado = card.dataset.estado ? card.dataset.estado.trim() : null;
             const especialidade = card.dataset.especialidade ? card.dataset.especialidade.trim() : null;
@@ -361,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalCadastro.classList.toggle('ativo');
     }
 
-    btnAbrirModal.addEventListener('click', () => {
+    btnCadastrar.addEventListener('click', () => {
         formCadastro.reset();
         campoHiddenEdit.value = '';
         modalTitulo.textContent = 'Cadastrar Novo Profissional';
@@ -383,9 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLimpar.addEventListener('click', () => {
         comparacaoContainer.classList.remove('visivel');
-        filtroCidade.value = '';
         filtroNome.value = '';
         filtroEspecialidade.value = '';
+        filtroCidade.value = '';
         filtroValorMin.value = '';
         filtroValorMax.value = '';
         seletorOrdenacao.value = 'padrao';

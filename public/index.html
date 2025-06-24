@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
 </head>
 <body>
     <header>
@@ -16,52 +15,63 @@
 
     <main>
         <section class="filtros">
-            <div class="grupo-inputs-texto">
-                <input type="text" id="filtro-nome" placeholder="Nome do médico ou clínica">
-                <input type="text" id="filtro-especialidade" placeholder="Digite a especialidade">
-                <input type="text" id="filtro-cidade" placeholder="Digite a cidade">
-            </div>
-           <div class="grupo-inputs-valor">
-            <div class="filtro-valor-grupo">
-                <label for="filtro-valor-min">Preço entre:</label>
-                <input type="number" id="filtro-valor-min" placeholder="Mín.">
-                <span>-</span>
-                <input type="number" id="filtro-valor-max" placeholder="Máx.">
-            </div>
-
-            <div class="filtro-ordenacao-grupo">
-                <label for="seletor-ordenacao">Ordenar por:</label>
-                <select id="seletor-ordenacao">
-                    <option value="padrao">Padrão</option>
-                    <option value="preco-asc">Preço (menor para maior)</option>
-                    <option value="preco-desc">Preço (maior para menor)</option>
-                    <option value="nome-asc">Nome da Clínica (A-Z)</option>
-                </select>
-            </div>
-
-            <div class="filtros-acoes">
-                <button id="btn-limpar" title="Limpar todos os filtros">Limpar Filtros</button>
-                <button id="btn-abrir-modal" class="botao-cadastrar-filtro">Cadastrar</button>
+            <div class="container-filtros">
+                <div class="filtros-wrapper">
+                    <div class="grupo-filtro">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="nome" placeholder="Buscar por nome...">
+                    </div>
+            
+                    <div class="grupo-filtro">
+                        <label for="especialidade">Especialidade:</label>
+                        <input type="text" id="especialidade" placeholder="Buscar especialidade...">
+                    </div>
+            
+                    <div class="grupo-filtro">
+                        <label for="cidade">Cidade:</label>
+                        <input type="text" id="cidade" placeholder="Buscar cidade...">
+                    </div>
+            
+                    <div class="grupo-filtro faixa-preco">
+                        <label>Faixa de Preço (SNS):</label>
+                        <div class="inputs-preco">
+                            <input type="number" id="valor-min" placeholder="Mín.">
+                            <span>-</span>
+                            <input type="number" id="valor-max" placeholder="Máx.">
+                        </div>
+                    </div>
+            
+                    <div class="grupo-filtro">
+                        <label for="ordenar">Ordenar por:</label>
+                        <select id="ordenar">
+                            <option value="padrao">Padrão</option>
+                            <option value="preco-menor">Menor Preço</option>
+                            <option value="preco-maior">Maior Preço</option>
+                        </select>
+                    </div>
+            
+                    <div class="botoes-filtro">
+                        <button class="btn btn-limpar">Limpar Filtros</button>
+                        <button class="btn btn-cadastrar">Cadastrar</button>
+                    </div>
+                </div>
             </div>
         </section>
 
         <div class="main-wrapper">
-    <div class="resultados-wrapper">
-        <div class="resultados-header"></div> 
-        
-        <section id="resultados-container"></section>
-        <div id="pagination-container"></div>
-    </div>
+            <div class="resultados-wrapper">
+                <div class="resultados-header"></div>
+                <section id="resultados-container"></section>
+                <div id="pagination-container"></div>
+            </div>
 
-    <aside id="comparacao-vizinhos-container">
-    </aside>
-</div>
-
+            <aside id="comparacao-vizinhos-container"></aside>
+        </div>
     </main>
 
     <div id="modal-cadastro" class="modal-container">
         <div class="modal-content">
-            <span class="fechar-modal">&times;</span>
+            <span class="fechar-modal">×</span>
             <h2>Cadastrar Novo Profissional</h2>
             <form id="form-cadastro">
                 <div class="form-grupo">
@@ -84,22 +94,22 @@
                     </div>
                     <div class="form-grupo">
                         <label for="cad-estado">Estado (UF)</label>
-                        <input type="text" id="cad-estado" >
+                        <input type="text" id="cad-estado">
                     </div>
                 </div>
                 <div class="form-grupo-inline">
                     <div class="form-grupo">
                         <label for="cad-valor-sns">Valor pela SNS</label>
-                        <input type="number" id="cad-valor-sns" step="0.01" >
+                        <input type="number" id="cad-valor-sns" step="0.01">
                     </div>
                     <div class="form-grupo">
                         <label for="cad-valor-original">Valor Original</label>
-                        <input type="number" id="cad-valor-original" step="0.01" >
+                        <input type="number" id="cad-valor-original" step="0.01">
                     </div>
                 </div>
                 <div class="form-grupo">
                     <label for="cad-atualizado">Data de Atualização</label>
-                    <input type="date" id="cad-atualizado" >
+                    <input type="date" id="cad-atualizado">
                 </div>
                 <button type="submit" class="botao-form-submit">Cadastrar</button>
             </form>

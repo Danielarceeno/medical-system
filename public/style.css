@@ -4,6 +4,9 @@
     --azul-escuro: #4A69E2;
     --cinza-texto: #555;
     --cinza-borda: #ccc;
+    --corpo-fundo: #0c2461;
+    --branco: #fff; 
+    --sombra-suave: rgba(0, 0, 0, 0.1); 
 }
 
 /* Estilo do Botão Principal de Cadastro */
@@ -145,14 +148,262 @@ header { background-color: #4A90E2; color: white; padding: 1rem; text-align: cen
 main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
 .filtros {
     display: flex;
-    flex-direction: column; /* Organiza os grupos um abaixo do outro */
-    gap: 1rem;
-    padding: 1.5rem;
+    flex-direction: column;
+    flex-wrap: wrap; /* Organiza os grupos um abaixo do outro */
+    gap:  20px;
+    align-items: flex-end;
+    padding: 20px 25px;
     background-color: white;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
     border: 1px solid #e0e0e0;
+}
+/* --- Container Principal dos Filtros --- */
+.container-filtros {
+    background-color: var(--branco);
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px var(--sombra-suave);
+    border: 1px solid #e0e0e0;
+    margin-bottom: 2rem;
+}
+
+/* --- Layout Flexbox para os Filtros --- */
+.filtros-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+    gap: 1.5rem;   /* Espaçamento entre todos os elementos */
+    align-items: flex-end; /* Alinha os itens na parte inferior */
+}
+
+/* --- Grupo de Filtro Individual (Nome, Especialidade, Cidade, etc.) --- */
+.grupo-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1 1 180px; /* Flex-grow, flex-shrink, flex-basis */
+    min-width: 160px;
+}
+
+.grupo-filtro label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--cinza-texto);
+}
+
+.grupo-filtro input,
+.grupo-filtro select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.grupo-filtro input:focus,
+.grupo-filtro select:focus {
+    outline: none;
+    border-color: var(--azul-escuro);
+    box-shadow: 0 0 0 3px rgba(74, 105, 226, 0.2);
+}
+
+/* --- Grupo Específico para Faixa de Preço --- */
+.grupo-filtro.faixa-preco {
+    flex: 1 1 220px; /* Um pouco mais de espaço base */
+}
+
+.inputs-preco {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.inputs-preco span {
+    color: var(--cinza-texto);
+    font-weight: bold;
+}
+
+/* --- Container para os Botões --- */
+.botoes-filtro {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 1.5rem; /* Adiciona margem quando os botões quebram a linha */
+}
+
+/* Estilo Base para os Botões */
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    white-space: nowrap; /* Impede que o texto quebre */
+}
+
+.btn-limpar {
+    background-color: var(--cinza-fundo-hover);
+    color: var(--cinza-texto);
+    border: 1px solid var(--cinza-borda);
+}
+
+.btn-limpar:hover {
+    background-color: #e0e0e0;
+    border-color: #aaa;
+}
+
+.btn-cadastrar {
+    background-color: var(--azul-escuro);
+    color: var(--branco);
+    box-shadow: 0 4px 10px rgba(74, 105, 226, 0.2);
+}
+
+.btn-cadastrar:hover {
+    background-color: #3a5ac2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 105, 226, 0.3);
+}
+
+/* --- Responsividade --- */
+@media (min-width: 992px) {
+    /* Em telas grandes, alinha os botões junto com os filtros */
+    .botoes-filtro {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        margin: 1rem auto;
+        padding: 0.5rem;
+    }
+
+    .container-filtros {
+        padding: 1.5rem;
+    }
+
+    .filtros-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .botoes-filtro {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .botoes-filtro .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .main-wrapper {
+        flex-direction: column;
+    }
+
+    #comparacao-vizinhos-container {
+        width: 100%;
+        position: static;
+        margin-top: 2rem;
+    }
+
+    #resultados-container {
+        grid-template-columns: 1fr; /* Single column on mobile */
+    }
+
+    .modal-content {
+        padding: 25px 20px;
+        width: 95%;
+    }
+
+    .form-grupo-inline {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-grupo-inline .form-grupo {
+        margin-bottom: 15px;
+    }
+
+    .card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .data-atualizacao {
+        margin-left: 0;
+        align-self: flex-end;
+    }
+}
+@media (max-width: 576px) {
+    .filtros {
+        padding: 1rem;
+    }
+
+    .grupo-filtro {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    .resultados-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .contador-resultados {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    #comparacao-vizinhos-container {
+        padding: 1rem;
+        min-height: 200px;
+    }
+
+    #comparacao-vizinhos-container .info-placeholder {
+        height: 150px;
+    }
+
+    #comparacao-vizinhos-container .info-placeholder svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .card h3 {
+        font-size: 1.2rem;
+    }
+
+    .card p {
+        font-size: 0.9rem;
+    }
+
+    .card .preco-sns {
+        font-size: 1rem;
+    }
+
+    .card-comparacao {
+        padding: 0.75rem;
+    }
+
+    .card-comparacao p {
+        font-size: 0.8rem;
+    }
+
+    .card-comparacao .preco-sns {
+        font-size: 1rem;
+    }
 }
 
 .grupo-inputs-texto, .grupo-inputs-valor {
@@ -167,80 +418,43 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
 }
 
 
-/* Estilos Gerais dos Inputs nos Filtros */
-.filtros input[type="text"],
-.filtros input[type="number"] {
-    background-color: #f9f9f9;
-    border: 2px solid var(--cinza-borda);
-    border-radius: 8px; /* Cantos arredondados */
-    padding: 12px;
-    font-size: 1rem;
-    color: var(--cinza-texto);
-    transition: all 0.3s ease; /* Transição suave */
-}
-
-/* Efeito de foco nos inputs */
-.filtros input[type="text"]:focus,
-.filtros input[type="number"]:focus {
-    outline: none;
-    border-color: var(--azul-escuro); /* Borda azul ao focar */
-    background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(74, 105, 226, 0.2); /* Sombra sutil azul */
-}
-
-/* Placeholder (texto de dica) estilizado */
-.filtros input::placeholder {
-    color: #aaa;
-}
-
-/* Estilo do Grupo de Valor (Mín. e Máx.) */
-.filtro-valor-grupo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.filtro-valor-grupo span {
-    color: var(--cinza-texto);
-    font-size: 1.2rem;
-}
-.filtro-valor-grupo input {
-    width: 100px; /* Largura fixa para os campos de valor */
-}
-
-.filtros-acoes {
-    display: flex;
-    gap: 0.5rem;
-    margin-left: auto; /* Mágica para empurrar os botões para a direita */
-}
-
 /* Novo estilo para o botão de cadastro na barra de filtros */
 .botao-cadastrar-filtro {
     background-color: var(--azul-escuro);
     color: white;
-    border: 2px solid var(--azul-escuro);
-    border-radius: 8px;
+    border: none;
     padding: 12px 20px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .botao-cadastrar-filtro:hover {
-    background-color: #3a5ac2;
-    border-color: #3a5ac2;
+    background-color: #3b89c9;
 }
 /* Estilo do Botão "Limpar Filtros" */
 #btn-limpar {
-    background-color: transparent;
+    background-color: #f1f1f1;
     color: var(--cinza-texto);
-    border: 2px solid var(--cinza-borda);
-    border-radius: 8px;
+    border: 1px solid var(--cinza-borda);
     padding: 12px 20px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#btn-limpar:hover {
+    background-color: #e0e0e0;
 }
 
 #btn-limpar:hover {
@@ -340,7 +554,6 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
     color: #9b2c2c;
     border-color: #f59595;
 }
-.filtros input[type="text"] { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; }
 #resultados-container { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .card { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; }
 .card h3 { margin-top: 0; color: #4A90E2; }
@@ -441,9 +654,12 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
         padding: 0.5rem;
     }
 
-    /* --- Filtros com Layout Inteligente --- */
-    .filtros {
-        flex-direction: column; /* Mantém os GRUPOS empilhados */
+
+    /* Garante que os botões ocupem toda a largura no modo coluna */
+    #btn-limpar,
+    .botao-cadastrar-filtro {
+        width: 100%;
+        justify-content: center;
     }
 
     /* Essa é a mudança principal: os itens dentro dos grupos agora podem quebrar a linha */
@@ -452,7 +668,7 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
         flex-direction: row; /* Volta para a direção de linha */
         flex-wrap: wrap;     /* <<< A MÁGICA: permite que os itens quebrem a linha */
     }
-
+    
     /* --- Controle de Tamanho dos Itens do Filtro --- */
     /* Usamos o seletor universal * para pegar todos os filhos diretos dos grupos */
     .grupo-inputs-texto > *,
@@ -466,15 +682,6 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
         flex: 1 1 180px; 
         min-width: 160px; /* Garante uma largura mínima para não ficar espremido */
     }
-
-    .filtros-acoes {
-        flex: 1 1 100%; /* Faz o container dos botões ocupar a linha inteira */
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        min-width: unset; /* Reseta a largura mínima */
-    }
-
 
     /* --- Cards de Resultado (sem mudanças) --- */
     #resultados-container {
@@ -672,3 +879,4 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
     font-size: 0.9rem;
     font-weight: bold;
 }
+
