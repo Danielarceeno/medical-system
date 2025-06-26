@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     const itemsPerPage = 9;
 
+    let comparisonCurrentPage = 1;
+    const comparisonItemsPerPage = 5;
+    let currentComparisonData = null;
+
     // --- FUNÇÕES ---
     async function buscarDados() {
         try {
@@ -112,18 +116,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupPagination() {
         const pageCount = Math.ceil(dadosFiltrados.length / itemsPerPage);
-        if (pageCount <= 1) return;
-
-        for (let i = 1; i <= pageCount; i++) {
+        paginationContainer.innerHTML = '';
+    
+        if (pageCount <= 1) {
+            return; 
+        }
+    
+        // --- Funções auxiliares para criar os elementos ---
+        const createButton = (page, text, isDisabled = false, isActive = false) => {
             const btn = document.createElement('button');
-            btn.classList.add('page-btn');
-            btn.dataset.page = i;
-            btn.innerText = i;
-            if (i === currentPage) {
+            btn.className = 'page-btn';
+            if (text === 'Anterior') {
+                btn.innerHTML = `<i class="fas fa-chevron-left"></i> Anterior`;
+                btn.classList.add('btn-prev');
+            } else if (text === 'Próxima') {
+                btn.innerHTML = `Próxima <i class="fas fa-chevron-right"></i>`;
+                btn.classList.add('btn-next');
+            } else {
+                btn.innerText = text;
+            }
+            
+            btn.dataset.page = page;
+            btn.disabled = isDisabled;
+    
+            if (isActive) {
                 btn.classList.add('active');
             }
             paginationContainer.appendChild(btn);
+        };
+    
+        const createEllipsis = () => {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'pagination-ellipsis';
+            ellipsis.innerText = '...';
+            paginationContainer.appendChild(ellipsis);
+        };
+    
+        createButton(currentPage - 1, 'Anterior', currentPage === 1);
+    
+        const pagesToShow = new Set();
+        const window = 2; 
+    
+        pagesToShow.add(1);
+    
+        for (let i = -window; i <= window; i++) {
+            const page = currentPage + i;
+            if (page > 1 && page < pageCount) {
+                pagesToShow.add(page);
+            }
         }
+     
+        if (pageCount > 1) pagesToShow.add(pageCount);
+        if (pageCount > 2) pagesToShow.add(pageCount - 1);
+        if (pageCount > 3) pagesToShow.add(pageCount - 2);
+    
+        // --- Montar os botões e elipses ---
+        const sortedPages = Array.from(pagesToShow).sort((a, b) => a - b);
+        let lastPage = 0;
+        
+        for (const page of sortedPages) {
+            if (page > lastPage + 1) {
+                createEllipsis(); // Adiciona "..." se houver um salto nos números
+            }
+            createButton(page, page, false, page === currentPage);
+            lastPage = page;
+        }
+    
+        createButton(currentPage + 1, 'Próxima', currentPage === pageCount);
     }
 
     function aplicarFiltros() {
@@ -161,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarPagina();
     }
 
-    function renderizarPlaceholderComparacao(mensagem = 'Clique em um card para ver preços de especialistas iguais em cidades vizinhas.') {
+    function renderizarPlaceholderComparacao(mensagem = 'Clique em um card para ver a comparação de preços da especialidade em outras cidades.') {
         comparacaoContainer.innerHTML = `
             <div class="info-placeholder">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -172,50 +231,23 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
     
-    async function buscarPrecosVizinhos(cidade, estado, especialidade) {
-        if (!cidade || !estado || !especialidade) return;
-        
-        comparacaoContainer.innerHTML = '<p>Buscando cidades vizinhas...</p>';
-
-        try {
-            const response = await fetch(`/api/vizinhos/${cidade}/${estado}`);
-            const neighborsData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(neighborsData.error || 'Erro do servidor');
-            }
-
-            if (!neighborsData.list || neighborsData.list.length === 0) {
-                renderizarResultadosVizinhos([], cidade, especialidade);
-                return;
-            }
-            
-            const nomesCidadesVizinhas = neighborsData.list
-                .map(item => item.name.toLowerCase())
-                .filter(nomeVizinho => nomeVizinho !== cidade.toLowerCase());
-                
-            const nomesUnicos = [...new Set(nomesCidadesVizinhas)];
-
-            const resultadosVizinhos = dadosCompletos.filter(item => 
-                item.cidade && 
-                nomesUnicos.includes(item.cidade.toLowerCase()) &&
-                item.especialidade &&
-                item.especialidade.toLowerCase() === especialidade.toLowerCase()
-            );
-
-            renderizarResultadosVizinhos(resultadosVizinhos, cidade, especialidade);
-
-        } catch (error) {
-            console.error("Erro ao buscar cidades vizinhas:", error);
-            renderizarPlaceholderComparacao(`Não foi possível buscar cidades vizinhas. (${error.message})`);
+    function renderizarComparacaoGlobal(especialidade, cidadeSelecionada) {
+        if (!especialidade) {
+            renderizarPlaceholderComparacao('Card sem especialidade para poder comparar.');
+            return;
         }
+
+        const resultadosDaEspecialidade = dadosCompletos.filter(item => 
+            item.especialidade &&
+            item.especialidade.toLowerCase() === especialidade.toLowerCase()
+        );
+
+        renderizarResultadosComparacao(resultadosDaEspecialidade, especialidade, cidadeSelecionada);
     }
     
-    function renderizarResultadosVizinhos(resultados, cidadeOriginal, especialidade) {
-        let html = `<h3>Melhor valor para ${especialidade} nas cidades próximas</h3>`;
-    
-        const resultadosCompletos = resultados.filter(item => 
-            item.nome_do_medico && item.nome_do_medico.trim() !== '' && 
+    function renderizarResultadosComparacao(resultados, especialidade, cidadeOriginal) {
+        const resultadosCompletos = resultados.filter(item =>
+            item.nome_do_medico && item.nome_do_medico.trim() !== '' &&
             item.valor_pela_sns && parseFloat(String(item.valor_pela_sns).replace(',', '.')) > 0
         );
     
@@ -238,13 +270,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         if (listaFinal.length > 0) {
-            listaFinal.sort((a, b) => a.cidade.localeCompare(b.cidade));
-            
-            listaFinal.forEach(melhorOpcao => {
-                const valorSns = parseFloat(String(melhorOpcao.valor_pela_sns).replace(',', '.')) || 0;
-                const classeDestaque = (campeaGeral && melhorOpcao.rowIndex === campeaGeral.rowIndex) ? 'destaque-melhor-opcao' : '';
+            listaFinal.sort((a, b) => {
+                const cidadeA = a.cidade || '';
+                const cidadeB = b.cidade || '';
+                if (cidadeA.toLowerCase() === cidadeOriginal.toLowerCase() && cidadeB.toLowerCase() !== cidadeOriginal.toLowerCase()) return -1;
+                if (cidadeA.toLowerCase() !== cidadeOriginal.toLowerCase() && cidadeB.toLowerCase() === cidadeOriginal.toLowerCase()) return 1;
+                return cidadeA.localeCompare(cidadeB);
+            });
+        }
     
-                html += `
+        const startIndex = (comparisonCurrentPage - 1) * comparisonItemsPerPage;
+        const endIndex = startIndex + comparisonItemsPerPage;
+        const itensDaPagina = listaFinal.slice(startIndex, endIndex);
+    
+        let conteudoInterno = '';
+        if (itensDaPagina.length > 0) {
+            itensDaPagina.forEach(melhorOpcao => {
+                const valorSns = parseFloat(String(melhorOpcao.valor_pela_sns).replace(',', '.')) || 0;
+                let classeDestaque = '';
+                if (campeaGeral && melhorOpcao.rowIndex === campeaGeral.rowIndex) classeDestaque = 'destaque-melhor-opcao';
+                if (melhorOpcao.cidade.toLowerCase() === cidadeOriginal.toLowerCase()) classeDestaque += ' destaque-cidade-selecionada';
+    
+                conteudoInterno += `
                     <div class="card-comparacao ${classeDestaque}">
                         <p class="local-vizinho">${melhorOpcao.nome_da_clinica} - <strong>${melhorOpcao.cidade}</strong></p>
                         <p><strong>Médico(a):</strong> ${melhorOpcao.nome_do_medico}</p>
@@ -252,12 +299,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             });
-    
-        } else {
-            html += `<p>Nenhum profissional de ${especialidade} foi encontrado nas cidades vizinhas para comparação.</p>`;
+        } else if (listaFinal.length === 0) {
+             conteudoInterno += `<p class="nenhum-resultado-comparacao">Nenhum profissional de ${especialidade} com preço cadastrado foi encontrado para comparação.</p>`;
         }
+
+        comparacaoContainer.innerHTML = `
+        <div class="comparacao-header">
+            <div class="comparacao-header-info">
+                <i class="fas fa-tags"></i>
+                <div class="comparacao-header-texto">
+                    <span>Comparativo de Preços</span>
+                    <strong>${especialidade}</strong>
+                </div>
+            </div>
+            <button id="btn-copiar-comparativo" title="Copiar resumo da cidade selecionada">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+        <div class="comparacao-wrapper-interno">
+            ${conteudoInterno}
+        </div>
+    `;
     
-        comparacaoContainer.innerHTML = html;
+        if (listaFinal.length > comparisonItemsPerPage) {
+            const paginationDiv = document.createElement('div');
+            paginationDiv.id = 'comparison-pagination-container';
+            comparacaoContainer.querySelector('.comparacao-wrapper-interno').appendChild(paginationDiv);
+            setupComparisonPagination(listaFinal.length);
+        }
     }
     
     document.addEventListener('click', (event) => {
@@ -326,19 +395,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } else {
+        } else { // Este é o bloco a ser alterado
             document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
             card.classList.add('selecionado');
             comparacaoContainer.classList.add('visivel');
-
-            const cidade = card.dataset.cidade ? card.dataset.cidade.trim() : null;
-            const estado = card.dataset.estado ? card.dataset.estado.trim() : null;
+    
             const especialidade = card.dataset.especialidade ? card.dataset.especialidade.trim() : null;
+            const cidadeSelecionada = card.dataset.cidade ? card.dataset.cidade.trim() : null;
             
-            if (cidade && estado && especialidade) {
-                buscarPrecosVizinhos(cidade, estado, especialidade);
+            if (especialidade && cidadeSelecionada) {
+                // Reseta a paginação da comparação e guarda os dados para a nova busca
+                comparisonCurrentPage = 1; 
+                currentComparisonData = { especialidade, cidadeSelecionada };
+                renderizarComparacaoGlobal(especialidade, cidadeSelecionada);
             } else {
-                renderizarPlaceholderComparacao('Card sem cidade, estado ou especialidade para poder comparar.');
+                renderizarPlaceholderComparacao('Card sem especialidade ou cidade para poder comparar.');
             }
         }
     });
@@ -415,6 +486,114 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function setupComparisonPagination(totalItems) {
+        const container = document.getElementById('comparison-pagination-container');
+        if (!container) return;
+    
+        const pageCount = Math.ceil(totalItems / comparisonItemsPerPage);
+        container.innerHTML = '';
+    
+        // Botão Anterior
+        const prevButton = document.createElement('button');
+        prevButton.className = 'comparison-page-btn comparison-btn-prev';
+        prevButton.innerHTML = `<i class="fas fa-chevron-left"></i>`;
+        prevButton.disabled = comparisonCurrentPage === 1;
+        container.appendChild(prevButton);
+    
+        // Texto "Página X de Y"
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'comparison-page-info';
+        pageInfo.innerText = `${comparisonCurrentPage} de ${pageCount}`;
+        container.appendChild(pageInfo);
+    
+        // Botão Próxima
+        const nextButton = document.createElement('button');
+        nextButton.className = 'comparison-page-btn comparison-btn-next';
+        nextButton.innerHTML = `<i class="fas fa-chevron-right"></i>`;
+        nextButton.disabled = comparisonCurrentPage === pageCount;
+        container.appendChild(nextButton);
+    }
+    
+    // Adiciona um novo event listener para o painel de comparação
+    comparacaoContainer.addEventListener('click', (event) => {
+        // Lógica para o botão de copiar
+        const copyBtn = event.target.closest('#btn-copiar-comparativo');
+        if (copyBtn) {
+            event.stopPropagation();
+            gerarEcopiarTextoComparativo();
+            return;
+        }
+    
+        // Lógica para a paginação (continua a mesma)
+        const pageBtn = event.target.closest('.comparison-page-btn');
+        if (!pageBtn) return;
+        
+        event.stopPropagation();
+    
+        if (pageBtn.classList.contains('comparison-btn-prev') && !pageBtn.disabled) {
+            comparisonCurrentPage--;
+        } else if (pageBtn.classList.contains('comparison-btn-next') && !pageBtn.disabled) {
+            comparisonCurrentPage++;
+        } else {
+            return;
+        }
+    
+        if (currentComparisonData) {
+            renderizarComparacaoGlobal(currentComparisonData.especialidade, currentComparisonData.cidadeSelecionada);
+        }
+    });
+    function gerarEcopiarTextoComparativo() {
+        if (!currentComparisonData) return;
+    
+        const { especialidade, cidadeSelecionada } = currentComparisonData;
+    
+        // 1. Filtra todos os dados para encontrar os profissionais daquela especialidade e cidade
+        const resultadosDaCidade = dadosCompletos.filter(item => 
+            item.especialidade && item.cidade &&
+            item.especialidade.toLowerCase() === especialidade.toLowerCase() &&
+            item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
+        );
+    
+        // 2. Agrupa os resultados por nome da clínica
+        const clinicas = new Map();
+        resultadosDaCidade.forEach(item => {
+            const nomeClinica = item.nome_da_clinica || 'Clínica não informada';
+            if (!clinicas.has(nomeClinica)) {
+                clinicas.set(nomeClinica, []);
+            }
+            clinicas.get(nomeClinica).push(item);
+        });
+    
+        // 3. Monta o texto no formato solicitado
+        let textoFinal = `${especialidade.toUpperCase()} ${cidadeSelecionada.toUpperCase()}\n`;
+    
+        clinicas.forEach((profissionais, nomeClinica) => {
+            textoFinal += `\n${nomeClinica.toUpperCase()}:\n`;
+            profissionais.forEach(p => {
+                const valorSns = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')).toFixed(2).replace('.', ',') : null;
+                const valorOriginal = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')).toFixed(2).replace('.', ',') : null;
+                const nomeMedico = p.nome_do_medico ? ` com ${p.nome_do_medico}` : '';
+    
+                let linha = '';
+                if (valorOriginal && valorSns) {
+                    linha = `Valor de R$${valorOriginal} por R$${valorSns} pela SNS${nomeMedico}`;
+                } else if (valorSns) {
+                    linha = `Valor R$${valorSns} pela SNS${nomeMedico}`;
+                } else {
+                    return; // Não adiciona linha se não houver preço
+                }
+                textoFinal += `${linha}\n`;
+            });
+        });
+    
+        // 4. Copia o texto para a área de transferência
+        navigator.clipboard.writeText(textoFinal.trim()).then(() => {
+            Toastify({ text: "Resumo copiado!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
+        }).catch(err => {
+            console.error('Erro ao copiar:', err);
+            Toastify({ text: "Falha ao copiar texto.", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
+        });
+    }
     // --- INICIA A APLICAÇÃO ---
     buscarDados();
 });

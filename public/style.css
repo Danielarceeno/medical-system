@@ -169,7 +169,6 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
     margin-bottom: 2rem;
 }
 
-/* --- Layout Flexbox para os Filtros --- */
 .filtros-wrapper {
     display: flex;
     flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
@@ -745,24 +744,117 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
 
 /* --- Container de Comparação de Cidades Vizinhas --- */
 #comparacao-vizinhos-container {
-    flex: 1; /* Ocupa 1/3 do espaço */
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 1.5rem;
-    position: sticky; /* Fica fixo ao rolar a página */
-    top: 2rem;
-    min-height: 300px;
-    transition: all 0.3s ease;
-    border: 1px solid #e0e0e0;
+	flex: 1; /* Ocupa 1/3 do espaço */
+	align-self: flex-start; /* Garante que o painel não se estique verticalmente */
+	background-color: #fff;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+	padding: 1.5rem;
+	min-height: 300px;
+	transition: all 0.3s ease;
+	border: 1px solid #e0e0e0;
+	position: -webkit-sticky; /* Garante compatibilidade com Safari */
+	position: sticky; /* Necessário para o sticky funcionar corretamente */
+    top: 0; /* Fixa o topo do painel */
+    width: 350px; /* Largura fixa para o painel */
+    max-height: calc(100vh - 4rem); /* Limita a altura máxima para não ultrapassar a tela */
+    overflow-y: auto; /* Permite rolagem se o conteúdo for maior que a altura máxima */
+    margin-left: auto; /* Alinha o painel à direita do container principal */
+    margin-top: 2rem; /* Distância do topo da tela */
+	top: 2rem; /* Distância do topo da tela após a rolagem */
+    scrollbar-width: thin;
+    scrollbar-color: var(--cinza-borda) transparent;
 }
 
 #comparacao-vizinhos-container h3 {
-    margin-top: 0;
+    display: none;
+}
+
+.comparacao-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--azul-claro);
     color: var(--azul-escuro);
-    border-bottom: 2px solid var(--azul-claro);
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem; /* Puxa o header para as bordas do painel */
+    border-bottom: 3px solid rgba(0,0,0,0.05);
+}
+.comparacao-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#btn-copiar-comparativo {
+    background-color: transparent;
+    border: 2px solid var(--azul-claro);
+    color: var(--azul-escuro);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Impede que o botão encolha */
+}
+
+#btn-copiar-comparativo:hover {
+    background-color: var(--azul-escuro);
+    color: var(--branco);
+    transform: scale(1.05);
+}
+
+#btn-copiar-comparativo i {
+    pointer-events: none; /* Garante que o clique seja sempre no botão */
+}
+.comparacao-header i.fa-tags {
+    font-size: 1.8rem;
+}
+
+.comparacao-header-texto {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.comparacao-header-texto span {
+    font-size: 0.9rem;
+    font-weight: normal;
+}
+
+.comparacao-header-texto strong {
+    font-size: 1.2rem;
+}
+
+.nenhum-resultado-comparacao {
+    padding: 1rem;
+    text-align: center;
+    color: #777;
+}
+
+/* --- DESTAQUES PARA CARDS DE COMPARAÇÃO --- */
+
+/* Destaque para a opção mais barata de todas (fundo verde) */
+.card-comparacao.destaque-melhor-opcao {
+    background-color: #E8F5E9; 
+    border-left: 4px solid #4CAF50;
+}
+
+/* Destaque para a cidade que foi originalmente selecionada (borda azul) */
+.card-comparacao.destaque-cidade-selecionada {
+    border-color: var(--azul-escuro);
+    background-color: #f0f3ff;
+    border-left: 4px solid var(--azul-escuro);
+}
+
+/* Garante que o destaque de "melhor opção" prevaleça sobre o de "cidade selecionada" se ambos forem verdadeiros */
+.card-comparacao.destaque-cidade-selecionada.destaque-melhor-opcao {
+     background-color: #E8F5E9; /* Fundo verde prevalece */
+     border-left: 4px solid #4CAF50; /* Borda verde prevalece */
+     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
 }
 
 #comparacao-vizinhos-container .info-placeholder {
@@ -880,3 +972,76 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
     font-weight: bold;
 }
 
+/* Estilo para as reticências "..." */
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    color: var(--cinza-texto);
+    font-weight: bold;
+}
+
+/* Garante que o botão desabilitado (Anterior/Próxima) tenha uma aparência clara de inativo */
+.page-btn:disabled {
+    background-color: #f1f1f1;
+    color: var(--cinza-borda);
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.page-btn:disabled:hover {
+    background-color: #f1f1f1; /* Impede mudança de cor no hover */
+    border-color: #e0e0e0;
+}
+
+.btn-prev, .btn-next {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* --- ESTILOS PARA A PAGINAÇÃO DO PAINEL DE COMPARAÇÃO --- */
+#comparison-pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.comparison-page-btn {
+    background-color: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    border-radius: 50%; /* Botões redondos */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.comparison-page-btn:hover:not(:disabled) {
+    background-color: var(--azul-claro);
+    border-color: var(--azul-escuro);
+    color: var(--azul-escuro);
+}
+
+.comparison-page-btn:disabled {
+    color: var(--cinza-borda);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comparison-page-info {
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+    font-weight: bold;
+    min-width: 60px; /* Garante espaço para o texto */
+    text-align: center;
+}
