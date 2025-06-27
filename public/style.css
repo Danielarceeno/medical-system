@@ -340,7 +340,36 @@ main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
         margin-left: 0;
         align-self: flex-end;
     }
+
+        /* 1. Transforma o container principal em uma grade de coluna única */
+        .filtros-wrapper {
+            display: grid;
+            grid-template-columns: 1fr; /* Força todos os itens a uma única coluna */
+            gap: 1.25rem; /* Define um espaçamento vertical consistente entre os filtros */
+            align-items: stretch; /* Garante que os itens se estiquem */
+        }
+    
+        /* 2. Remove margens desnecessárias dos botões que podem ter sido herdadas */
+        .botoes-filtro {
+            margin-top: 0.5rem; /* Pequeno ajuste na margem superior */
+            width: 100%;
+            display: grid; /* Usa grid também para os botões */
+            gap: 0.75rem; /* Espaçamento entre os botões */
+        }
+    
+        /* 3. Garante que os botões ocupem toda a largura */
+        .botoes-filtro .btn {
+            width: 100%;
+            text-align: center;
+            padding: 14px; /* Aumenta um pouco o padding para facilitar o toque */
+        }
+    
+        /* 4. Ajuste no padding geral do container de filtros */
+        .filtros {
+            padding: 1.5rem;
+        }
 }
+
 @media (max-width: 576px) {
     .filtros {
         padding: 1rem;
