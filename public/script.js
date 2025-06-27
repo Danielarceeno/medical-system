@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <strong>${especialidade}</strong>
                 </div>
             </div>
-            <button id="btn-copiar-comparativo" title="Copiar resumo da cidade selecionada">
+            <button id="btn-copiar-comparativo" title="Copiar resumo da cidade ${cidadeOriginal} selecionada">
                 <i class="fas fa-copy"></i>
             </button>
         </div>
@@ -543,57 +543,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     function gerarEcopiarTextoComparativo() {
-        if (!currentComparisonData) return;
-    
-        const { especialidade, cidadeSelecionada } = currentComparisonData;
-    
-        // 1. Filtra todos os dados para encontrar os profissionais daquela especialidade e cidade
-        const resultadosDaCidade = dadosCompletos.filter(item => 
-            item.especialidade && item.cidade &&
-            item.especialidade.toLowerCase() === especialidade.toLowerCase() &&
-            item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
-        );
-    
-        // 2. Agrupa os resultados por nome da clínica
-        const clinicas = new Map();
-        resultadosDaCidade.forEach(item => {
-            const nomeClinica = item.nome_da_clinica || 'Clínica não informada';
-            if (!clinicas.has(nomeClinica)) {
-                clinicas.set(nomeClinica, []);
+    if (!currentComparisonData) return;
+
+    const { especialidade, cidadeSelecionada } = currentComparisonData;
+
+    // Formata os títulos para um visual mais limpo (Ex: "Cardiologia" em vez de "cardiologia")
+    const especialidadeFormatada = especialidade.charAt(0).toUpperCase() + especialidade.slice(1).toLowerCase();
+    const cidadeFormatada = cidadeSelecionada.charAt(0).toUpperCase() + cidadeSelecionada.slice(1).toLowerCase();
+
+    // 1. Filtra os dados da cidade e especialidade selecionadas
+    const resultadosDaCidade = dadosCompletos.filter(item =>
+        item.especialidade && item.cidade &&
+        item.especialidade.toLowerCase() === especialidade.toLowerCase() &&
+        item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
+    );
+
+    // 2. Agrupa os resultados por clínica
+    const clinicas = new Map();
+    resultadosDaCidade.forEach(item => {
+        const nomeClinica = item.nome_da_clinica || 'Clínica não informada';
+        if (!clinicas.has(nomeClinica)) {
+            clinicas.set(nomeClinica, []);
+        }
+        clinicas.get(nomeClinica).push(item);
+    });
+
+    // 3. Monta o texto no novo formato
+    let textoFinal = `✨ *Comparativo de Preços* ✨\n\n`;
+    textoFinal += `*${especialidadeFormatada} em ${cidadeFormatada}*\n`;
+
+    clinicas.forEach((profissionais, nomeClinica) => {
+        textoFinal += `\n🏥 *${nomeClinica.trim()}*\n`; // Nome da clínica em negrito com emoji
+
+        profissionais.forEach(p => {
+            // Pega os valores numéricos para poder calcular
+            const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')) : null;
+            const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')) : null;
+            
+            // Formata para exibição
+            const valorSns = valorSnsNum ? valorSnsNum.toFixed(2).replace('.', ',') : null;
+            const valorOriginal = valorOriginalNum ? valorOriginalNum.toFixed(2).replace('.', ',') : null;
+            
+            // Deixa o nome do médico em negrito
+            const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
+            
+            let linha = '';
+
+            // Se tem valor original e SNS, calcula e mostra a economia
+            if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
+                const economia = (valorOriginalNum - valorSnsNum).toFixed(2).replace('.', ',');
+                // Usa riscado (~) para o valor antigo e negrito (*) para o novo
+                linha = `  • ${nomeMedico}: ~R$${valorOriginal}~ por *R$${valorSns}* \n`;
+            } 
+            // Se tem apenas valor SNS
+            else if (valorSns) {
+                linha = `  • ${nomeMedico}: *R$${valorSns}* pela SNS \n`;
+            } 
+            // Se não tem preço, não adiciona a linha
+            else {
+                return;
             }
-            clinicas.get(nomeClinica).push(item);
+            textoFinal += linha;
         });
-    
-        // 3. Monta o texto no formato solicitado
-        let textoFinal = `${especialidade.toUpperCase()} ${cidadeSelecionada.toUpperCase()}\n`;
-    
-        clinicas.forEach((profissionais, nomeClinica) => {
-            textoFinal += `\n${nomeClinica.toUpperCase()}:\n`;
-            profissionais.forEach(p => {
-                const valorSns = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')).toFixed(2).replace('.', ',') : null;
-                const valorOriginal = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')).toFixed(2).replace('.', ',') : null;
-                const nomeMedico = p.nome_do_medico ? ` com ${p.nome_do_medico}` : '';
-    
-                let linha = '';
-                if (valorOriginal && valorSns) {
-                    linha = `Valor de R$${valorOriginal} por R$${valorSns} pela SNS${nomeMedico}`;
-                } else if (valorSns) {
-                    linha = `Valor R$${valorSns} pela SNS${nomeMedico}`;
-                } else {
-                    return; // Não adiciona linha se não houver preço
-                }
-                textoFinal += `${linha}\n`;
-            });
-        });
-    
-        // 4. Copia o texto para a área de transferência
-        navigator.clipboard.writeText(textoFinal.trim()).then(() => {
-            Toastify({ text: "Resumo copiado!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
-        }).catch(err => {
-            console.error('Erro ao copiar:', err);
-            Toastify({ text: "Falha ao copiar texto.", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
-        });
+    });
+
+    // Adiciona um rodapé com um aviso
+    textoFinal += `\n---\n_Valores sujeitos a alteração._`;
+
+    // 4. Copia o texto para a área de transferência (mesma lógica de antes)
+    navigator.clipboard.writeText(textoFinal.trim()).then(() => {
+        Toastify({ text: "Resumo copiado!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        Toastify({ text: "Falha ao copiar texto.", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
+    });
     }
+
     // --- INICIA A APLICAÇÃO ---
     buscarDados();
 });
