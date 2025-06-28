@@ -1,7 +1,4 @@
 /* 1. Base e Variáveis */
-@import url('styles/base/_variables.css');
-@import url('styles/base/_typography.css');
-@import url('styles/base/_reset.css');
 @import url('styles/base/_bases.css');
 
 /* 2. Layouts Globais */
