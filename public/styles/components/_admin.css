@@ -1,0 +1,7 @@
+.admin-only {
+    display: none; /* Esconde os botões por padrão */
+}
+
+.admin-only.is-visible {
+    display: flex; /* ou 'block', dependendo do seu layout de botão */
+}

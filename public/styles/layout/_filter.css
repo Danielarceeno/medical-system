@@ -92,6 +92,19 @@
         width: 100%;
         margin-top: 0.5rem;
     }
+     body.is-logged-in .botoes-filtro {
+        /* ...muda o layout dos botões para flexbox... */
+        display: flex;
+        flex-direction: row;
+        /* ...e centraliza eles horizontalmente. */
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Também precisamos garantir que os botões não ocupem 100% da largura */
+    body.is-logged-in .botoes-filtro .btn {
+        width: auto; /* Deixa o botão ter sua largura natural */
+    }
 }
 
 @media (max-width: 576px) {

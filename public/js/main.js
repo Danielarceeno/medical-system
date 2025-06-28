@@ -2,6 +2,7 @@ import * as DOMElements from './modules/domElements.js';
 import * as API from './modules/api.js';
 import * as UI from './modules/ui.js';
 import { setupEventListeners } from './modules/eventListeners.js';
+import { gerenciarControlesAdmin } from './modules/ui.js';
 
 // Centraliza o estado da aplicação
 const appState = {
@@ -63,6 +64,12 @@ const methods = {
 
 // Função de inicialização
 async function init() {
+     // Verifica se o usuário já está logado na sessão
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        gerenciarControlesAdmin(true);
+    } else {
+        gerenciarControlesAdmin(false);
+    }
     UI.renderizarPlaceholderComparacao();
     setupEventListeners(appState, methods);
     await methods.refreshData();

@@ -1,5 +1,4 @@
 // Funções para interagir com a API backend.
-
 async function request(url, options) {
     try {
         const response = await fetch(url, options);
@@ -38,4 +37,18 @@ export async function salvarDados(dadosDoForm, rowIndex) {
 
 export async function excluirRegistro(rowIndex) {
     return request(`/api/excluir/${rowIndex}`, { method: 'DELETE' });
+}
+
+export async function fazerLogin(email, senha) {
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.message || 'Falha no login');
+    }
+    return result;
 }

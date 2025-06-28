@@ -15,6 +15,7 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
         `;
     }
 
+    // 1. Apaga os cards antigos
     resultadosContainer.innerHTML = '';
     paginationContainer.innerHTML = '';
 
@@ -28,11 +29,22 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
     const endIndex = startIndex + itemsPerPage;
     const itensDaPagina = dadosFiltrados.slice(startIndex, endIndex);
 
+    // 2. Desenha os novos cards
     itensDaPagina.forEach(item => {
         const card = criarCard(item);
         resultadosContainer.appendChild(card);
     });
 
+    // 3. Verifica se o usuário está logado e mostra os botões nos novos cards
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        const adminButtonsOnCards = resultadosContainer.querySelectorAll('.admin-only');
+        adminButtonsOnCards.forEach(btn => {
+            btn.classList.add('is-visible');
+        });
+    }
+    // ==================================================================
+
+    // 4. Configura a nova paginação
     setupPagination(dadosFiltrados.length, currentPage, itemsPerPage);
 }
 
@@ -69,10 +81,10 @@ function criarCard(item) {
         ${htmlPrecoSns}
         ${htmlEconomia}
         <div class="card-footer">
-            <div class="botoes-acao">
-                <button class="btn-editar">✏️ Editar</button>
-                <button class="btn-excluir" title="Excluir Registro">🗑️ Excluir</button>
-            </div>
+        <div class="botoes-acao">
+            <button class="btn-editar admin-only">✏️ Editar</button>
+            <button class="btn-excluir admin-only" title="Excluir Registro">🗑️ Excluir</button>
+        </div>
             ${item.atualizado ? `<span class="data-atualizacao">Atualizado em: ${item.atualizado}</span>` : ''}
         </div>
     `;
@@ -297,6 +309,26 @@ export function prepararModalParaEdicao(itemData) {
     modalTitulo.textContent = 'Editar Registro';
     modalBotaoSubmit.textContent = 'Salvar Alterações';
     toggleModal();
+}
+export function toggleLoginModal() {
+    DOMElements.modalLogin.classList.toggle('ativo');
+}
+
+export function gerenciarControlesAdmin(logado) {
+    const controlesAdmin = document.querySelectorAll('.admin-only');
+    const btnLogin = DOMElements.btnLogin;
+
+    if (logado) {
+       document.body.classList.add('is-logged-in') // Se está logado: mostra os controles de admin e esconde o botão de login
+        controlesAdmin.forEach(c => c.classList.add('is-visible'));
+        if (btnLogin) btnLogin.style.display = 'none';
+
+    } else {
+        document.body.classList.add('is-logged-in')
+        // Se NÃO está logado: esconde os controles de admin e mostra o botão de login
+        controlesAdmin.forEach(c => c.classList.remove('is-visible'));
+        if (btnLogin) btnLogin.style.display = 'flex';
+    }
 }
 
 // Prepara o modal para um novo cadastro

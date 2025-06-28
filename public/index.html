@@ -21,17 +21,17 @@
                         <label for="nome">Nome:</label>
                         <input type="text" id="nome" placeholder="Buscar por nome...">
                     </div>
-            
+                    
                     <div class="grupo-filtro">
                         <label for="especialidade">Especialidade:</label>
                         <input type="text" id="especialidade" placeholder="Buscar especialidade...">
                     </div>
-            
+                    
                     <div class="grupo-filtro">
                         <label for="cidade">Cidade:</label>
                         <input type="text" id="cidade" placeholder="Buscar cidade...">
                     </div>
-            
+                    
                     <div class="grupo-filtro faixa-preco">
                         <label>Faixa de Preço (SNS):</label>
                         <div class="inputs-preco">
@@ -40,7 +40,7 @@
                             <input type="number" id="valor-max" placeholder="Máx.">
                         </div>
                     </div>
-            
+                    
                     <div class="grupo-filtro">
                         <label for="ordenar">Ordenar por:</label>
                         <select id="ordenar">
@@ -49,10 +49,11 @@
                             <option value="preco-maior">Maior Preço</option>
                         </select>
                     </div>
-            
+                    
                     <div class="botoes-filtro">
                         <button class="btn btn-limpar">Limpar Filtros</button>
-                        <button class="btn btn-cadastrar">Cadastrar</button>
+<button id="btn-login" class="btn btn-limpar">Login</button>                        <button id="btn-abrir-modal-cadastro" class="btn btn-cadastrar admin-only">Cadastrar</button>
+                        <button id="btn-logout" class="btn btn-sair admin-only">Sair</button>
                     </div>
                 </div>
             </div>
@@ -64,7 +65,6 @@
                 <section id="resultados-container"></section>
                 <div id="pagination-container"></div>
             </div>
-
             <aside id="comparacao-vizinhos-container"></aside>
         </div>
     </main>
@@ -116,7 +116,25 @@
         </div>
     </div>
 
-     <script type="module" src="js/main.js"></script> 
+    <div id="modal-login" class="modal-container">
+        <div class="modal-content">
+            <span class="fechar-modal-login">×</span>
+            <h2>Acesso Restrito</h2>
+            <form id="form-login">
+                <div class="form-grupo">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" required>
+                </div>
+                <button type="submit" class="botao-form-submit">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script> 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </body>
 </html>

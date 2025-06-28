@@ -19,6 +19,18 @@ app.use(express.json());
 let cacheDeDados = null;
 let timestampDoCache = null;
 const DURACAO_DO_CACHE_EM_MINUTOS = 0.3; 
+
+app.post('/api/login', (req, res) => {
+    const { email, senha } = req.body;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminSenha = process.env.ADMIN_SENHA;
+    if (email === adminEmail && senha === adminSenha) {
+        res.json({ success: true, message: 'Login realizado com sucesso!' });
+    } else {
+        res.status(401).json({ success: false, message: 'Credenciais inválidas.' });
+    }
+});
+
 // Rota de LEITURA (GET) com lógica de cache
 app.get('/api/dados', async (req, res) => {
     if (cacheDeDados && timestampDoCache) {

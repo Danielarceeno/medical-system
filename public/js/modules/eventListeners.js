@@ -4,23 +4,24 @@ import * as API from './api.js';
 
 // Função que configura todos os event listeners da aplicação
 export function setupEventListeners(appState, methods) {
+    // Desestrutura os elementos do DOM para fácil acesso
     const {
         filtroNome, filtroEspecialidade, filtroCidade, filtroValorMin, filtroValorMax, seletorOrdenacao,
-        resultadosContainer, paginationContainer, comparacaoContainer, btnLimpar, btnCadastrar,
-        modalCadastro, fecharModal, formCadastro
+        resultadosContainer, paginationContainer, comparacaoContainer, btnLimpar,
+        modalCadastro, fecharModal, formCadastro,
+        btnLogin, modalLogin, fecharModalLogin, formLogin, btnCadastrar
     } = DOMElements;
 
-    // Listeners para os filtros
+    // --- Listeners para os Filtros ---
     const filtros = [filtroNome, filtroEspecialidade, filtroCidade, filtroValorMin, filtroValorMax, seletorOrdenacao];
     filtros.forEach(filtro => {
         filtro.addEventListener('input', () => methods.aplicarFiltrosErenderizar());
     });
     seletorOrdenacao.addEventListener('change', () => methods.aplicarFiltrosErenderizar());
 
-    // Listener para limpar filtros
+    // --- Listener para Limpar Filtros ---
     btnLimpar.addEventListener('click', () => {
-        const { comparacaoContainer } = DOMElements;
-        comparacaoContainer.classList.remove('visivel');
+        DOMElements.comparacaoContainer.classList.remove('visivel');
         filtroNome.value = '';
         filtroEspecialidade.value = '';
         filtroCidade.value = '';
@@ -30,14 +31,80 @@ export function setupEventListeners(appState, methods) {
         methods.aplicarFiltrosErenderizar();
     });
 
-    // Listener para o container de resultados (delegação de eventos)
+    // --- Listener para o Modal de Login ---
+    if (btnLogin) {
+        btnLogin.addEventListener('click', UI.toggleLoginModal);
+    }
+    if (fecharModalLogin) {
+        fecharModalLogin.addEventListener('click', UI.toggleLoginModal);
+    }
+    if (modalLogin) {
+        modalLogin.addEventListener('click', (event) => {
+            if (event.target === modalLogin) UI.toggleLoginModal();
+        });
+    }
+
+    // --- Listener para o Formulário de Login ---
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+
+            try {
+                await API.fazerLogin(email, senha);
+                sessionStorage.setItem('isLoggedIn', 'true'); // Salva o estado de login na sessão
+                UI.gerenciarControlesAdmin(true);
+                UI.toggleLoginModal();
+                Toastify({ text: "Login bem-sucedido!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
+            } catch (error) {
+                Toastify({ text: error.message, duration: 4000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" } }).showToast();
+            }
+        });
+    }
+
+    // --- Listener para o Modal de Cadastro ---
+    if (btnCadastrar) {
+        btnCadastrar.addEventListener('click', UI.prepararModalParaCadastro);
+    }
+    if (fecharModal) {
+        fecharModal.addEventListener('click', UI.toggleModal);
+    }
+    if (modalCadastro) {
+        modalCadastro.addEventListener('click', (event) => {
+            if (event.target === modalCadastro) UI.toggleModal();
+        });
+    }
+
+    // --- Listener para o Formulário de Cadastro/Edição ---
+    if (formCadastro) {
+        formCadastro.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const dadosDoForm = {
+                nomeClinica: document.getElementById('cad-nome-clinica').value,
+                nomeMedico: document.getElementById('cad-nome-medico').value,
+                especialidade: document.getElementById('cad-especialidade').value,
+                cidade: document.getElementById('cad-cidade').value,
+                estado: document.getElementById('cad-estado').value,
+                valorSns: document.getElementById('cad-valor-sns').value,
+                valorOriginal: document.getElementById('cad-valor-original').value,
+                atualizado: document.getElementById('cad-atualizado').value
+            };
+            
+            await API.salvarDados(dadosDoForm, DOMElements.campoHiddenEdit.value);
+            Toastify({ text: "Operação realizada com sucesso!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
+            UI.toggleModal();
+            methods.refreshData();
+        });
+    }
+
+    // --- Listener para o Container de Resultados (Delegação de Eventos) ---
     resultadosContainer.addEventListener('click', async (event) => {
         const card = event.target.closest('.card');
         if (!card) return;
 
         const targetButton = event.target.closest('button');
-        if (targetButton) {
-            // Ações de Editar ou Excluir
+        if (targetButton && sessionStorage.getItem('isLoggedIn') === 'true') { // Ações só para admin
             const rowIndex = card.dataset.rowIndex;
             const itemData = appState.dadosCompletos.find(item => item.rowIndex == rowIndex);
             if (!itemData) return;
@@ -51,8 +118,7 @@ export function setupEventListeners(appState, methods) {
                     methods.refreshData();
                 }
             }
-        } else {
-            // Ação de clique no card para mostrar comparação
+        } else { // Ação de clique normal no card (para todos os usuários)
             document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
             card.classList.add('selecionado');
             comparacaoContainer.classList.add('visivel');
@@ -73,35 +139,8 @@ export function setupEventListeners(appState, methods) {
             }
         }
     });
-    
-    // Listeners do Modal
-    btnCadastrar.addEventListener('click', UI.prepararModalParaCadastro);
-    fecharModal.addEventListener('click', UI.toggleModal);
-    modalCadastro.addEventListener('click', (event) => {
-        if (event.target === modalCadastro) UI.toggleModal();
-    });
 
-    // Listener para submit do formulário de cadastro/edição
-    formCadastro.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const dadosDoForm = {
-            nomeClinica: document.getElementById('cad-nome-clinica').value,
-            nomeMedico: document.getElementById('cad-nome-medico').value,
-            especialidade: document.getElementById('cad-especialidade').value,
-            cidade: document.getElementById('cad-cidade').value,
-            estado: document.getElementById('cad-estado').value,
-            valorSns: document.getElementById('cad-valor-sns').value,
-            valorOriginal: document.getElementById('cad-valor-original').value,
-            atualizado: document.getElementById('cad-atualizado').value
-        };
-        
-        await API.salvarDados(dadosDoForm, DOMElements.campoHiddenEdit.value);
-        Toastify({ text: "Operação realizada com sucesso!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
-        UI.toggleModal();
-        methods.refreshData();
-    });
-
-    // Listener para a paginação principal
+    // --- Listener para a Paginação Principal ---
     paginationContainer.addEventListener('click', (event) => {
         const pageBtn = event.target.closest('.page-btn');
         if (pageBtn && !pageBtn.disabled) {
@@ -110,7 +149,7 @@ export function setupEventListeners(appState, methods) {
         }
     });
 
-    // Listener para o painel de comparação (paginação e cópia)
+    // --- Listener para o Painel de Comparação (Paginação e Cópia) ---
     comparacaoContainer.addEventListener('click', (event) => {
         if (event.target.closest('#btn-copiar-comparativo')) {
             event.stopPropagation();
@@ -133,7 +172,7 @@ export function setupEventListeners(appState, methods) {
         }
     });
 
-    // Listener para fechar a comparação ao clicar fora
+    // --- Listener para Fechar Comparação ao Clicar Fora ---
     document.addEventListener('click', (event) => {
         const isClickInsideResults = event.target.closest('.resultados-wrapper');
         const isClickInsideComparison = event.target.closest('#comparacao-vizinhos-container');
@@ -145,4 +184,23 @@ export function setupEventListeners(appState, methods) {
             }
         }
     });
+    const { btnLogout } = DOMElements;
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            // 1. Limpa o estado de login da sessão do navegador
+            sessionStorage.removeItem('isLoggedIn');
+
+            // 2. Chama a função da UI para reverter a página ao estado de visitante
+            UI.gerenciarControlesAdmin(false);
+
+            // 3. Mostra uma notificação de sucesso
+            Toastify({
+                text: "Você saiu com sucesso!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+            }).showToast();
+        });
+    }
 }

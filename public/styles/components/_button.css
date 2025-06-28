@@ -85,6 +85,15 @@
     border-color: #f59595;
 }
 
+.btn-sair {
+    background-color: #ff4757; /* Um tom de vermelho */
+    color: white;
+}
+
+.btn-sair:hover {
+    background-color: #c0392b;
+}
+
 /* --- Responsividade --- */
 @media (max-width: 768px) {
     .botoes-filtro .btn {
