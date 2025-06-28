@@ -1,0 +1,38 @@
+.form-grupo {
+    margin-bottom: 15px;
+}
+
+.form-grupo label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+}
+
+.form-grupo input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.form-grupo-inline {
+    display: flex;
+    gap: 15px;
+}
+
+.form-grupo-inline .form-grupo {
+    flex: 1;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 768px) {
+    .form-grupo-inline {
+        flex-direction: column;
+        gap: 0;
+    }
+    .form-grupo-inline .form-grupo {
+        margin-bottom: 15px;
+    }
+}

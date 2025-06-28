@@ -1,0 +1,18 @@
+/* Definição das variáveis de cor e sombra para o projeto */
+:root {
+    --azul-claro: #EAF2FF;
+    --azul-escuro: #4A69E2;
+    --cinza-texto: #555;
+    --cinza-borda: #ccc;
+    --corpo-fundo: #0c2461;
+    --branco: #fff;
+    --sombra-suave: rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos globais do corpo da página */
+body {
+    font-family: sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+}

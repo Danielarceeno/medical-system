@@ -1,0 +1,98 @@
+/* Paginação Principal */
+#pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 2rem 0;
+}
+
+.page-btn {
+    background-color: #fff;
+    border: 2px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: var(--azul-claro);
+    border-color: var(--azul-escuro);
+}
+
+.page-btn.active {
+    background-color: var(--azul-escuro);
+    color: white;
+    border-color: var(--azul-escuro);
+}
+
+.page-btn:disabled {
+    background-color: #f1f1f1;
+    color: var(--cinza-borda);
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.btn-prev, .btn-next {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    color: var(--cinza-texto);
+    font-weight: bold;
+}
+
+/* Paginação do Painel de Comparação */
+#comparison-pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.comparison-page-btn {
+    background-color: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.comparison-page-btn:hover:not(:disabled) {
+    background-color: var(--azul-claro);
+    border-color: var(--azul-escuro);
+    color: var(--azul-escuro);
+}
+
+.comparison-page-btn:disabled {
+    color: var(--cinza-borda);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comparison-page-info {
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+}

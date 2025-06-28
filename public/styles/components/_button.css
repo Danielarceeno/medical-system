@@ -1,0 +1,95 @@
+/* Estilo Base para os botões do filtro */
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    white-space: nowrap;
+}
+
+.btn-limpar {
+    background-color: #f1f1f1;
+    color: var(--cinza-texto);
+    border: 1px solid var(--cinza-borda);
+}
+
+.btn-limpar:hover {
+    background-color: #e0e0e0;
+    border-color: #aaa;
+}
+
+.btn-cadastrar {
+    background-color: var(--azul-escuro);
+    color: var(--branco);
+    box-shadow: 0 4px 10px rgba(74, 105, 226, 0.2);
+}
+
+.btn-cadastrar:hover {
+    background-color: #3a5ac2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 105, 226, 0.3);
+}
+
+/* Botão de submit do formulário no modal */
+.botao-form-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--azul-escuro);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.botao-form-submit:hover {
+    background-color: #3a5ac2;
+}
+
+/* Botões de ação dentro dos cards */
+.btn-editar, .btn-excluir {
+    background-color: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--cinza-texto);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.btn-editar:hover {
+    background-color: #f1f1f1;
+    color: #333;
+    border-color: #aaa;
+}
+
+.btn-excluir {
+    border-color: #fabbbb;
+    color: #c53030;
+}
+
+.btn-excluir:hover {
+    background-color: #fed7d7;
+    color: #9b2c2c;
+    border-color: #f59595;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 768px) {
+    .botoes-filtro .btn {
+        width: 100%;
+        text-align: center;
+        padding: 14px;
+    }
+}

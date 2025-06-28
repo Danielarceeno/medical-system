@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } else { // Este é o bloco a ser alterado
+        } else { 
             document.querySelectorAll('.card.selecionado').forEach(c => c.classList.remove('selecionado'));
             card.classList.add('selecionado');
             comparacaoContainer.classList.add('visivel');
@@ -411,6 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 renderizarPlaceholderComparacao('Card sem especialidade ou cidade para poder comparar.');
             }
+        if (window.innerWidth <= 900) {
+            // Rola a tela suavemente para que o painel de comparação fique visível
+            comparacaoContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         }
     });
     
