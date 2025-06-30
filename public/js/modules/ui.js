@@ -364,7 +364,7 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
         clinicas.get(nomeClinica).push(item);
     });
 
-    let textoFinal = `✨ *Comparativo de Preços* ✨\n\n*${especialidadeFormatada} em ${cidadeFormatada}*\n`;
+    let textoFinal = `\n\n*${especialidadeFormatada} em ${cidadeFormatada}*\n`;
 
     clinicas.forEach((profissionais, nomeClinica) => {
         textoFinal += `\n🏥 *${nomeClinica.trim()}*\n`;
@@ -376,7 +376,7 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
             const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
             
             if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
-                textoFinal += `  • ${nomeMedico}: ~R$${valorOriginal}~ por *R$${valorSns}* \n`;
+                textoFinal += `  • ${nomeMedico}: De *R$${valorOriginal}* por *R$${valorSns}* \n`;
             } else if (valorSns) {
                 textoFinal += `  • ${nomeMedico}: *R$${valorSns}* pela SNS \n`;
             }
