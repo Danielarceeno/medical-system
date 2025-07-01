@@ -1,7 +1,5 @@
-// Funções que manipulam e renderizam a interface do usuário (UI).
 import * as DOMElements from './domElements.js';
 
-// Função para renderizar os cards de resultados na página
 export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
     const { resultadosContainer, paginationContainer } = DOMElements;
     const resultadosHeader = document.querySelector('.resultados-header');
@@ -15,7 +13,6 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
         `;
     }
 
-    // 1. Apaga os cards antigos
     resultadosContainer.innerHTML = '';
     paginationContainer.innerHTML = '';
 
@@ -29,32 +26,30 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
     const endIndex = startIndex + itemsPerPage;
     const itensDaPagina = dadosFiltrados.slice(startIndex, endIndex);
 
-    // 2. Desenha os novos cards
     itensDaPagina.forEach(item => {
         const card = criarCard(item);
         resultadosContainer.appendChild(card);
     });
 
-    // 3. Verifica se o usuário está logado e mostra os botões nos novos cards
     if (sessionStorage.getItem('isLoggedIn') === 'true') {
         const adminButtonsOnCards = resultadosContainer.querySelectorAll('.admin-only');
         adminButtonsOnCards.forEach(btn => {
             btn.classList.add('is-visible');
         });
     }
-    // ==================================================================
 
-    // 4. Configura a nova paginação
     setupPagination(dadosFiltrados.length, currentPage, itemsPerPage);
 }
 
+
+// Função auxiliar para criar um único card
 function criarCard(item) {
     const valorSns = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
     const valorOriginal = parseFloat(String(item.valor_original).replace(',', '.'));
 
     let especialidadeCompleta = item.especialidade || '';
     if (item.observacao && item.observacao.trim() !== '') {
-        especialidadeCompleta += ` ${item.observacao}`;
+        especialidadeCompleta += ` (${item.observacao})`;
     }
 
     const htmlMedico = item.nome_do_medico ? `<p><i class="fas fa-user-doctor"></i> ${item.nome_do_medico}</p>` : '';
@@ -93,6 +88,7 @@ function criarCard(item) {
     `;
     return card;
 }
+
 
 // Configura a paginação principal
 function setupPagination(totalItems, currentPage, itemsPerPage) {
@@ -295,6 +291,7 @@ export function prepararModalParaEdicao(itemData) {
     document.getElementById('cad-nome-clinica').value = itemData.nome_da_clinica || '';
     document.getElementById('cad-nome-medico').value = itemData.nome_do_medico || '';
     document.getElementById('cad-especialidade').value = itemData.especialidade || '';
+    document.getElementById('cad-observacao').value = itemData.observacao || '';
     document.getElementById('cad-cidade').value = itemData.cidade || '';
     document.getElementById('cad-estado').value = itemData.estado || '';
     document.getElementById('cad-valor-sns').value = String(itemData.valor_pela_sns || '').replace(',', '.');
@@ -321,13 +318,12 @@ export function gerenciarControlesAdmin(logado) {
     const btnLogin = DOMElements.btnLogin;
 
     if (logado) {
-       document.body.classList.add('is-logged-in') // Se está logado: mostra os controles de admin e esconde o botão de login
+       document.body.classList.add('is-logged-in') 
         controlesAdmin.forEach(c => c.classList.add('is-visible'));
         if (btnLogin) btnLogin.style.display = 'none';
 
     } else {
         document.body.classList.add('is-logged-in')
-        // Se NÃO está logado: esconde os controles de admin e mostra o botão de login
         controlesAdmin.forEach(c => c.classList.remove('is-visible'));
         if (btnLogin) btnLogin.style.display = 'flex';
     }
@@ -348,7 +344,6 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
     if (!currentComparisonData) return;
 
     const { especialidade, cidadeSelecionada } = currentComparisonData;
-    const especialidadeFormatada = especialidade.charAt(0).toUpperCase() + especialidade.slice(1).toLowerCase();
     const cidadeFormatada = cidadeSelecionada.charAt(0).toUpperCase() + cidadeSelecionada.slice(1).toLowerCase();
 
     const resultadosDaCidade = dadosCompletos.filter(item =>
@@ -357,36 +352,49 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
         item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
     );
 
-    const clinicas = new Map();
-    resultadosDaCidade.forEach(item => {
-        const nomeClinica = item.nome_da_clinica || 'Clínica não informada';
-        if (!clinicas.has(nomeClinica)) {
-            clinicas.set(nomeClinica, []);
+    const grupos = new Map();
+    resultadosDaCidade.forEach(p => {
+        let especialidadeCompleta = p.especialidade ? p.especialidade.charAt(0).toUpperCase() + p.especialidade.slice(1).toLowerCase() : 'Especialidade não informada';
+        if (p.observacao && p.observacao.trim() !== '') {
+            especialidadeCompleta += ` ${p.observacao}`;
         }
-        clinicas.get(nomeClinica).push(item);
+
+        if (!grupos.has(especialidadeCompleta)) {
+            grupos.set(especialidadeCompleta, new Map());
+        }
+        const clinicasDoGrupo = grupos.get(especialidadeCompleta);
+
+        const nomeClinica = p.nome_da_clinica || 'Clínica não informada';
+        if (!clinicasDoGrupo.has(nomeClinica)) {
+            clinicasDoGrupo.set(nomeClinica, []);
+        }
+        clinicasDoGrupo.get(nomeClinica).push(p);
     });
 
-    let textoFinal = `\n\n*${especialidadeFormatada} em ${cidadeFormatada}*\n`;
+    let textoFinal = ``;
 
-    clinicas.forEach((profissionais, nomeClinica) => {
-        textoFinal += `\n🏥 *${nomeClinica.trim()}*\n`;
-        profissionais.forEach(p => {
-            const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')) : null;
-            const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')) : null;
-            const valorSns = valorSnsNum ? valorSnsNum.toFixed(2).replace('.', ',') : null;
-            const valorOriginal = valorOriginalNum ? valorOriginalNum.toFixed(2).replace('.', ',') : null;
-            const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
-            const obsTexto = p.observacao ? ` *${p.observacao}* ` : '';
+    grupos.forEach((clinicas, especialidadeDoGrupo) => {
+        textoFinal += `\n\n*${especialidadeDoGrupo} em ${cidadeFormatada}*`;
 
-            if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
-                textoFinal += `  • ${nomeMedico}${obsTexto}: ~R$${valorOriginal}~ por *R$${valorSns}* \n`;
-            } else if (valorSns) {
-                textoFinal += `  • ${nomeMedico}${obsTexto}: *R$${valorSns}* pela SNS \n`;
-            }
+        clinicas.forEach((profissionais, nomeClinica) => {
+            textoFinal += `\n\n🏥 *${nomeClinica.trim()}*`;
+            profissionais.forEach(p => {
+                const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')) : null;
+                const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')) : null;
+                const valorSns = valorSnsNum ? valorSnsNum.toFixed(2).replace('.', ',') : null;
+                const valorOriginal = valorOriginalNum ? valorOriginalNum.toFixed(2).replace('.', ',') : null;
+                const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
+
+                if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
+                    textoFinal += `\n  • ${nomeMedico}: *R$${valorOriginal}* por *R$${valorSns}*`;
+                } else if (valorSns) {
+                    textoFinal += `\n  • ${nomeMedico}: *R$${valorSns}* pela *SNS*`;
+                }
+            });
         });
     });
 
-    textoFinal += `\n---\n_Valores sujeitos a alteração._`;
+    textoFinal += `\n\n---\n_Valores sujeitos a alteração._`;
 
     navigator.clipboard.writeText(textoFinal.trim()).then(() => {
         Toastify({ text: "Resumo copiado!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
