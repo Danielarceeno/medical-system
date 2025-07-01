@@ -48,14 +48,17 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
     setupPagination(dadosFiltrados.length, currentPage, itemsPerPage);
 }
 
-
-// Função auxiliar para criar um único card
 function criarCard(item) {
     const valorSns = parseFloat(String(item.valor_pela_sns).replace(',', '.'));
     const valorOriginal = parseFloat(String(item.valor_original).replace(',', '.'));
 
+    let especialidadeCompleta = item.especialidade || '';
+    if (item.observacao && item.observacao.trim() !== '') {
+        especialidadeCompleta += ` ${item.observacao}`;
+    }
+
     const htmlMedico = item.nome_do_medico ? `<p><i class="fas fa-user-doctor"></i> ${item.nome_do_medico}</p>` : '';
-    const htmlEspecialidade = item.especialidade ? `<p><i class="fas fa-stethoscope"></i> ${item.especialidade}</p>` : '';
+    const htmlEspecialidade = item.especialidade ? `<p><i class="fas fa-stethoscope"></i> ${especialidadeCompleta}</p>` : '';
     const localCompleto = [item.cidade, item.estado].filter(Boolean).join(' - ');
     const htmlLocal = localCompleto ? `<p><i class="fas fa-map-marker-alt"></i> ${localCompleto}</p>` : '';
     const htmlPrecoSns = !isNaN(valorSns) && valorSns > 0 ? `<p class="preco-sns">Valor SNS: R$ ${valorSns.toFixed(2).replace('.', ',')}</p>` : '';
@@ -90,7 +93,6 @@ function criarCard(item) {
     `;
     return card;
 }
-
 
 // Configura a paginação principal
 function setupPagination(totalItems, currentPage, itemsPerPage) {
@@ -374,11 +376,12 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
             const valorSns = valorSnsNum ? valorSnsNum.toFixed(2).replace('.', ',') : null;
             const valorOriginal = valorOriginalNum ? valorOriginalNum.toFixed(2).replace('.', ',') : null;
             const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
-            
+            const obsTexto = p.observacao ? ` *${p.observacao}* ` : '';
+
             if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
-                textoFinal += `  • ${nomeMedico}: De *R$${valorOriginal}* por *R$${valorSns}* \n`;
+                textoFinal += `  • ${nomeMedico}${obsTexto}: ~R$${valorOriginal}~ por *R$${valorSns}* \n`;
             } else if (valorSns) {
-                textoFinal += `  • ${nomeMedico}: *R$${valorSns}* pela SNS \n`;
+                textoFinal += `  • ${nomeMedico}${obsTexto}: *R$${valorSns}* pela SNS \n`;
             }
         });
     });

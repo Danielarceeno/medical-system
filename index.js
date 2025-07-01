@@ -47,7 +47,7 @@ app.get('/api/dados', async (req, res) => {
         const data = rows.map(row => {
             const rowData = {};
             sheet.headerValues.forEach(header => {
-                rowData[header] = row.get(header);
+                rowData[header] = row.get(header) || '';
             });
             rowData.rowIndex = row._rowNumber;
             return rowData;
