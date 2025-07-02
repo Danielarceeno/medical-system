@@ -339,32 +339,36 @@ export function prepararModalParaCadastro() {
     toggleModal();
 }
 
-// Gera e copia o texto de comparação
 export function gerarEcopiarTextoComparativo(currentComparisonData, dadosCompletos) {
     if (!currentComparisonData) return;
 
     const { especialidade, cidadeSelecionada } = currentComparisonData;
     const cidadeFormatada = cidadeSelecionada.charAt(0).toUpperCase() + cidadeSelecionada.slice(1).toLowerCase();
 
-    const resultadosDaCidade = dadosCompletos.filter(item =>
-        item.especialidade && item.cidade &&
-        item.especialidade.toLowerCase() === especialidade.toLowerCase() &&
-        item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
-    );
+    // Filtra os profissionais da cidade
+    const resultadosDaCidade = dadosCompletos.filter(item => {
+        const especialidadeMatch = (item.especialidade || '').trim().toLowerCase() === (especialidade || '').trim().toLowerCase();
+        const cidadeMatch = (item.cidade || '').trim().toLowerCase() === (cidadeSelecionada || '').trim().toLowerCase();
+        return item.especialidade && item.cidade && especialidadeMatch && cidadeMatch;
+    });
 
+    // Cria a estrutura de dados aninhada
     const grupos = new Map();
     resultadosDaCidade.forEach(p => {
-        let especialidadeCompleta = p.especialidade ? p.especialidade.charAt(0).toUpperCase() + p.especialidade.slice(1).toLowerCase() : 'Especialidade não informada';
-        if (p.observacao && p.observacao.trim() !== '') {
-            especialidadeCompleta += ` ${p.observacao}`;
+        const especialidadeBase = (p.especialidade || 'Especialidade não informada').trim();
+        const observacao = (p.observacao || '').trim();
+        
+        let especialidadeCompleta = especialidadeBase.charAt(0).toUpperCase() + especialidadeBase.slice(1).toLowerCase();
+        if (observacao !== '') {
+            especialidadeCompleta += ` (${observacao.toLowerCase()})`;
         }
 
         if (!grupos.has(especialidadeCompleta)) {
             grupos.set(especialidadeCompleta, new Map());
         }
         const clinicasDoGrupo = grupos.get(especialidadeCompleta);
-
-        const nomeClinica = p.nome_da_clinica || 'Clínica não informada';
+        const nomeClinica = (p.nome_da_clinica || 'Clínica não informada').trim();
+        
         if (!clinicasDoGrupo.has(nomeClinica)) {
             clinicasDoGrupo.set(nomeClinica, []);
         }
@@ -377,7 +381,7 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
         textoFinal += `\n\n*${especialidadeDoGrupo} em ${cidadeFormatada}*`;
 
         clinicas.forEach((profissionais, nomeClinica) => {
-            textoFinal += `\n\n🏥 *${nomeClinica.trim()}*`;
+            textoFinal += `\n\n🏥 *${nomeClinica}*`;
             profissionais.forEach(p => {
                 const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')) : null;
                 const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')) : null;
@@ -388,7 +392,7 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
                 if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
                     textoFinal += `\n  • ${nomeMedico}: *R$${valorOriginal}* por *R$${valorSns}*`;
                 } else if (valorSns) {
-                    textoFinal += `\n  • ${nomeMedico}: *R$${valorSns}* pela *SNS*`;
+                    textoFinal += `\n  • ${nomeMedico}: *R$${valorSns}* pela SNS`;
                 }
             });
         });
@@ -396,6 +400,7 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
 
     textoFinal += `\n\n---\n_Valores sujeitos a alteração._`;
 
+    // Copia o texto para a área de transferência
     navigator.clipboard.writeText(textoFinal.trim()).then(() => {
         Toastify({ text: "Resumo copiado!", duration: 3000, gravity: "top", position: "right", style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
     }).catch(err => {
