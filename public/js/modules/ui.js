@@ -385,15 +385,19 @@ export function gerarEcopiarTextoComparativo(currentComparisonData, dadosComplet
             profissionais.forEach(p => {
                 const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(',', '.')) : null;
                 const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(',', '.')) : null;
-                const valorSns = valorSnsNum ? valorSnsNum.toFixed(2).replace('.', ',') : null;
-                const valorOriginal = valorOriginalNum ? valorOriginalNum.toFixed(2).replace('.', ',') : null;
                 const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : 'Profissional';
 
+                let linha = `\n  • ${nomeMedico}`;
+
                 if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
-                    textoFinal += `\n  • ${nomeMedico}: *R$${valorOriginal}* por *R$${valorSns}*`;
-                } else if (valorSns) {
-                    textoFinal += `\n  • ${nomeMedico}: *R$${valorSns}* pela SNS`;
+                    const valorSns = valorSnsNum.toFixed(2).replace('.', ',');
+                    const valorOriginal = valorOriginalNum.toFixed(2).replace('.', ',');
+                    linha += `: *R$${valorOriginal}* por *R$${valorSns}*`;
+                } else if (valorSnsNum) {
+                    const valorSns = valorSnsNum.toFixed(2).replace('.', ',');
+                    linha += `: *R$${valorSns}* pela SNS`;
                 }
+                textoFinal += linha;
             });
         });
     });
