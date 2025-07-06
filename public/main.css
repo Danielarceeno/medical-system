@@ -1,16 +1,16 @@
 /* 1. Base e Variáveis */
-@import url('styles/base/_bases.css');
+@import url("styles/base/_bases.css");
 
 /* 2. Layouts Globais */
-@import url('styles/layout/_header.css');
-@import url('styles/layout/_filter.css');
-@import url('styles/layout/_main-wrapper.css');
-@import url('styles/layout/_comparison.css');
+@import url("styles/layout/_header.css");
+@import url("styles/layout/_filter.css");
+@import url("styles/layout/_main-wrapper.css");
+@import url("styles/layout/_comparison.css");
 
 /* 3. Componentes Reutilizáveis */
-@import url('styles/components/_button.css');
-@import url('styles/components/_card.css');
-@import url('styles/components/_modal.css');
-@import url('styles/components/_form.css');
-@import url('styles/components/_pagination.css');
-@import url('styles/components/_admin.css');
+@import url("styles/components/_button.css");
+@import url("styles/components/_card.css");
+@import url("styles/components/_modal.css");
+@import url("styles/components/_form.css");
+@import url("styles/components/_pagination.css");
+@import url("styles/components/_admin.css");
