@@ -1,23 +1,13 @@
-.btn {
+.btn,
+.btn-limpar {
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: none;
-  white-space: nowrap;
-}
-
-.btn-limpar {
-  background-color: #f1f1f1;
-  color: var(--cinza-texto);
   border: 1px solid var(--cinza-borda);
-}
-
-.btn-limpar:hover {
-  background-color: #e0e0e0;
-  border-color: #aaa;
+  white-space: nowrap;
 }
 
 .btn-cadastrar {
@@ -94,7 +84,8 @@
 
 /* --- Responsividade --- */
 @media (max-width: 768px) {
-  #btn-login {
+  #btn-login,
+  #btn-limpar {
     width: 100%;
     text-align: center;
     margin-top: 1rem;

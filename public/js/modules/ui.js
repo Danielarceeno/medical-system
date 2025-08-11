@@ -640,7 +640,7 @@ export function gerarEcopiarTextoComparativo(
       isFirstGroup = false;
     });
 
-    textoFinal += `\n\n---\n_Valores sujeitos a alteração._`;
+    textoFinal += `\n\n---\n_Valores e nomes dos profissionais sujeitos a alteração._`;
 
     navigator.clipboard
       .writeText(textoFinal.trim())
