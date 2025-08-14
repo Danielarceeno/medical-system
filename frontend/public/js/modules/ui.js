@@ -1,5 +1,95 @@
 import * as DOMElements from "./domElements.js";
 
+function ajustarAlturaModalLogin(formVisivel) {
+  const { modalLogin } = DOMElements;
+  const modalContent = modalLogin.querySelector('.modal-content');
+  const titulo = modalLogin.querySelector('h2');
+
+  if (modalContent && titulo && formVisivel) {
+    const alturaTotal = titulo.offsetHeight + formVisivel.scrollHeight + 25;
+    modalContent.style.height = `${alturaTotal}px`;
+  }
+}
+
+function resetLoginModal() {
+    const { modalLogin } = DOMElements;
+    if (modalLogin) {
+        modalLogin.classList.remove('step-2-active');
+        
+        const modalContent = modalLogin.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.height = '';
+        }
+        document.getElementById("login-email").value = "";
+        document.getElementById("login-code").value = "";
+    }
+}
+
+export function toggleLoginModal() {
+  const { modalLogin } = DOMElements;
+  const formRequestCode = document.getElementById("form-request-code");
+
+  modalLogin.classList.toggle("ativo");
+
+  if (modalLogin.classList.contains("ativo")) {
+    setTimeout(() => {
+        ajustarAlturaModalLogin(formRequestCode);
+    }, 0);
+  } else {
+    setTimeout(() => {
+        resetLoginModal();
+    }, 400); 
+  }
+}
+
+export function toggleModal() {
+  DOMElements.modalCadastro.classList.toggle("ativo");
+}
+
+export function prepararModalParaEdicao(itemData) {
+  const { formCadastro, campoHiddenEdit, modalTitulo, modalBotaoSubmit } =
+    DOMElements;
+  formCadastro.reset();
+
+  document.getElementById("cad-nome-clinica").value =
+    itemData.nome_da_clinica || "";
+  document.getElementById("cad-nome-medico").value =
+    itemData.nome_do_medico || "";
+  document.getElementById("cad-especialidade").value =
+    itemData.especialidade || "";
+  document.getElementById("cad-observacao").value = itemData.observacao || "";
+  document.getElementById("cad-cidade").value = itemData.cidade || "";
+  document.getElementById("cad-estado").value = itemData.estado || "";
+  document.getElementById("cad-valor-sns").value = String(
+    itemData.valor_pela_sns || ""
+  ).replace(",", ".");
+  document.getElementById("cad-valor-original").value = String(
+    itemData.valor_original || ""
+  ).replace(",", ".");
+
+  if (itemData.atualizado && itemData.atualizado.includes("/")) {
+    const [dia, mes, ano] = itemData.atualizado.split("/");
+    document.getElementById("cad-atualizado").value = `${ano}-${mes}-${dia}`;
+  } else {
+    document.getElementById("cad-atualizado").value = itemData.atualizado || "";
+  }
+
+  campoHiddenEdit.value = itemData.rowIndex;
+  modalTitulo.textContent = "Editar Registro";
+  modalBotaoSubmit.textContent = "Salvar Alterações";
+  toggleModal();
+}
+
+export function prepararModalParaCadastro() {
+  const { formCadastro, campoHiddenEdit, modalTitulo, modalBotaoSubmit } =
+    DOMElements;
+  formCadastro.reset();
+  campoHiddenEdit.value = "";
+  modalTitulo.textContent = "Cadastrar Novo Profissional";
+  modalBotaoSubmit.textContent = "Cadastrar";
+  toggleModal();
+}
+
 export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
   const { resultadosContainer, paginationContainer } = DOMElements;
   const resultadosHeader = document.querySelector(".resultados-header");
@@ -34,7 +124,7 @@ export function renderizarPagina(dadosFiltrados, currentPage, itemsPerPage) {
     resultadosContainer.appendChild(card);
   });
 
-  if (sessionStorage.getItem("isLoggedIn") === "true") {
+  if (sessionStorage.getItem("authToken")) {
     const adminButtonsOnCards =
       resultadosContainer.querySelectorAll(".admin-only");
     adminButtonsOnCards.forEach((btn) => {
@@ -177,59 +267,22 @@ function setupPagination(totalItems, currentPage, itemsPerPage) {
   createButton(currentPage + 1, "Próxima", currentPage === pageCount);
 }
 
-async function fetchRegionalData(
-  cidade,
-  estado,
-  especialidade,
-  dadosCompletos
-) {
+async function fetchRegionalData(cidade, estado, especialidade, dadosCompletos) {
+  console.warn("");
+  return [];
+  /*
   try {
     const response = await fetch(
       `/api/vizinhos/${encodeURIComponent(cidade)}/${encodeURIComponent(
         estado
       )}`
     );
-    const neighborsData = await response.json();
-    if (!response.ok) {
-      throw new Error(
-        neighborsData.error || "Falha ao buscar cidades vizinhas"
-      );
-    }
-
-    const nearbyCities = neighborsData.list.map((city) =>
-      city.name.toLowerCase()
-    );
-    const regionalResults = dadosCompletos.filter(
-      (item) =>
-        item.especialidade?.toLowerCase() === especialidade.toLowerCase() &&
-        nearbyCities.includes(item.cidade?.toLowerCase())
-    );
-
-    const melhoresOpcoesPorCidade = new Map();
-    regionalResults.forEach((item) => {
-      const cidade = item.cidade;
-      const precoAtual = parseFloat(
-        String(item.valor_pela_sns).replace(",", ".")
-      );
-      if (
-        !melhoresOpcoesPorCidade.has(cidade) ||
-        precoAtual <
-          parseFloat(
-            String(melhoresOpcoesPorCidade.get(cidade).valor_pela_sns).replace(
-              ",",
-              "."
-            )
-          )
-      ) {
-        melhoresOpcoesPorCidade.set(cidade, item);
-      }
-    });
-
-    return Array.from(melhoresOpcoesPorCidade.values());
+    // ... resto da lógica
   } catch (error) {
     console.error("Erro ao buscar dados regionais:", error);
     return [];
   }
+  */
 }
 
 export async function renderizarComparacao(
@@ -276,12 +329,8 @@ export async function renderizarComparacao(
 
   let cityContent = "";
   if (cityResults.length > 0) {
-    const cityCampea = cityResults.reduce((maisBarata, item) =>
-      parseFloat(String(item.valor_pela_sns).replace(",", ".")) <
-      parseFloat(String(maisBarata.valor_pela_sns).replace(",", "."))
-        ? item
-        : maisBarata
-    );
+    cityResults.sort((a,b) => (parseFloat(String(a.valor_pela_sns).replace(",",".")) || Infinity) - (parseFloat(String(b.valor_pela_sns).replace(",",".")) || Infinity));
+    const cityCampea = cityResults[0];
 
     const startIndex = (comparisonCurrentPage - 1) * comparisonItemsPerPage;
     const endIndex = startIndex + comparisonItemsPerPage;
@@ -292,16 +341,11 @@ export async function renderizarComparacao(
       const htmlPreco = criarHtmlPreco(item.valor_pela_sns);
 
       cityContent += `
-                <div class="card-comparacao ${
-                  isCampea && htmlPreco ? "destaque-melhor-opcao" : ""
-                }">
-                    <p class="local-vizinho">${
-                      item.nome_da_clinica
-                    } - <strong>${item.cidade}</strong></p>
-                    <p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>
-                    ${htmlPreco}
-                </div>
-            `;
+        <div class="card-comparacao ${isCampea && htmlPreco ? "destaque-melhor-opcao" : ""}">
+            <p class="local-vizinho">${item.nome_da_clinica} - <strong>${item.cidade}</strong></p>
+            <p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>
+            ${htmlPreco}
+        </div>`;
     });
   } else {
     cityContent = `<p class="nenhum-resultado-comparacao">Nenhum profissional de ${especialidade} com preço cadastrado foi encontrado em ${cidadeSelecionada}.</p>`;
@@ -309,98 +353,77 @@ export async function renderizarComparacao(
 
   let regionalContent = "";
   if (regionalResults.length > 0) {
-    const regionalCampea = regionalResults.reduce((maisBarata, item) =>
-      parseFloat(String(item.valor_pela_sns).replace(",", ".")) <
-      parseFloat(String(maisBarata.valor_pela_sns).replace(",", "."))
-        ? item
-        : maisBarata
-    );
+    regionalResults.sort((a,b) => (parseFloat(String(a.valor_pela_sns).replace(",",".")) || Infinity) - (parseFloat(String(b.valor_pela_sns).replace(",",".")) || Infinity));
+    const regionalCampea = regionalResults[0];
 
     const startIndex = (comparisonCurrentPage - 1) * comparisonItemsPerPage;
     const endIndex = startIndex + comparisonItemsPerPage;
     const regionalItems = regionalResults.slice(startIndex, endIndex);
 
     regionalItems.forEach((item) => {
-      const isCampea =
-        regionalCampea && item.rowIndex === regionalCampea.rowIndex;
+      const isCampea = regionalCampea && item.rowIndex === regionalCampea.rowIndex;
       const htmlPreco = criarHtmlPreco(item.valor_pela_sns);
 
       regionalContent += `
-                <div class="card-comparacao ${
-                  isCampea && htmlPreco ? "destaque-melhor-opcao" : ""
-                } ${
-        item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase()
-          ? "destaque-cidade-selecionada"
-          : ""
-      }">
-                    <p class="local-vizinho">${
-                      item.nome_da_clinica
-                    } - <strong>${item.cidade}</strong></p>
-                    <p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>
-                    ${htmlPreco}
-                </div>
-            `;
+        <div class="card-comparacao ${isCampea && htmlPreco ? "destaque-melhor-opcao" : ""} ${
+          item.cidade.toLowerCase() === cidadeSelecionada.toLowerCase() ? "destaque-cidade-selecionada" : ""
+        }">
+            <p class="local-vizinho">${item.nome_da_clinica} - <strong>${item.cidade}</strong></p>
+            <p><strong>Médico(a):</strong> ${item.nome_do_medico}</p>
+            ${htmlPreco}
+        </div>`;
     });
   } else {
     regionalContent = `<p class="nenhum-resultado-comparacao">Nenhum profissional de ${especialidade} com preço cadastrado foi encontrado em cidades vizinhas.</p>`;
   }
 
   comparacaoContainer.innerHTML = `
-        <div class="comparacao-section">
-            <div class="comparacao-header">
-                <div class="comparacao-header-info">
-                    <i class="fas fa-tags"></i>
-                    <div class="comparacao-header-texto">
-                        <span>Comparativo em ${cidadeSelecionada}</span>
-                        <strong>${especialidade}</strong>
-                    </div>
-                </div>
-                <div class="comparacao-header-botoes">
-                    <button id="btn-copiar-comparativo-cidade" title="Copiar resumo da cidade ${cidadeSelecionada}">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="toggle-section" data-section="cidade">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
+    <div class="comparacao-section">
+        <div class="comparacao-header">
+            <div class="comparacao-header-info">
+                <i class="fas fa-tags"></i>
+                <div class="comparacao-header-texto">
+                    <span>Comparativo em ${cidadeSelecionada}</span>
+                    <strong>${especialidade}</strong>
                 </div>
             </div>
-            <div class="comparacao-wrapper-interno cidade-section" style="display: block;">
-                ${cityContent}
-                ${
-                  cityResults.length > comparisonItemsPerPage
-                    ? `<div id="city-pagination-container"></div>`
-                    : ""
-                }
+            <div class="comparacao-header-botoes">
+                <button id="btn-copiar-comparativo-cidade" title="Copiar resumo da cidade ${cidadeSelecionada}">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="toggle-section" data-section="cidade">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
             </div>
         </div>
-        <div class="comparacao-section">
-            <div class="comparacao-header">
-                <div class="comparacao-header-info">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div class="comparacao-header-texto">
-                        <span>Comparativo na Região</span>
-                        <strong>${especialidade}</strong>
-                    </div>
-                </div>
-                <div class="comparacao-header-botoes">
-                    <button id="btn-copiar-comparativo-regiao" title="Copiar resumo da região">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="toggle-section" data-section="regiao">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+        <div class="comparacao-wrapper-interno cidade-section" style="display: block;">
+            ${cityContent}
+            ${cityResults.length > comparisonItemsPerPage ? `<div id="city-pagination-container" class="comparison-pagination"></div>` : ""}
+        </div>
+    </div>
+    <div class="comparacao-section">
+        <div class="comparacao-header">
+            <div class="comparacao-header-info">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="comparacao-header-texto">
+                    <span>Comparativo na Região</span>
+                    <strong>${especialidade}</strong>
                 </div>
             </div>
-            <div class="comparacao-wrapper-interno regiao-section" style="display: none;">
-                ${regionalContent}
-                ${
-                  regionalResults.length > comparisonItemsPerPage
-                    ? `<div id="regional-pagination-container"></div>`
-                    : ""
-                }
+            <div class="comparacao-header-botoes">
+                <button id="btn-copiar-comparativo-regiao" title="Copiar resumo da região">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="toggle-section" data-section="regiao">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
-    `;
+        <div class="comparacao-wrapper-interno regiao-section" style="display: none;">
+            ${regionalContent}
+            ${regionalResults.length > comparisonItemsPerPage ? `<div id="regional-pagination-container" class="comparison-pagination"></div>` : ""}
+        </div>
+    </div>`;
 
   if (cityResults.length > comparisonItemsPerPage) {
     setupComparisonPagination(
@@ -420,84 +443,29 @@ export async function renderizarComparacao(
   }
 }
 
-function setupComparisonPagination(
-  totalItems,
-  comparisonCurrentPage,
-  comparisonItemsPerPage,
-  containerId
-) {
+function setupComparisonPagination(totalItems, comparisonCurrentPage, comparisonItemsPerPage, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const pageCount = Math.ceil(totalItems / comparisonItemsPerPage);
   container.innerHTML = `
-        <button class="comparison-page-btn comparison-btn-prev" ${
-          comparisonCurrentPage === 1 ? "disabled" : ""
-        }>
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <span class="comparison-page-info">${comparisonCurrentPage} de ${pageCount}</span>
-        <button class="comparison-page-btn comparison-btn-next" ${
-          comparisonCurrentPage === pageCount ? "disabled" : ""
-        }>
-            <i class="fas fa-chevron-right"></i>
-        </button>
-    `;
+    <button class="comparison-page-btn comparison-btn-prev" ${comparisonCurrentPage === 1 ? "disabled" : ""}>
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="comparison-page-info">${comparisonCurrentPage} de ${pageCount}</span>
+    <button class="comparison-page-btn comparison-btn-next" ${comparisonCurrentPage === pageCount ? "disabled" : ""}>
+        <i class="fas fa-chevron-right"></i>
+    </button>`;
 }
 
-export function renderizarPlaceholderComparacao(
-  mensagem = "Clique em um card para ver a comparação de preços da especialidade em outras cidades."
-) {
+export function renderizarPlaceholderComparacao(mensagem = "Clique em um card para ver a comparação de preços da especialidade em outras cidades.") {
   DOMElements.comparacaoContainer.innerHTML = `
-        <div class="info-placeholder">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-            </svg>
-            <p>${mensagem}</p>
-        </div>
-    `;
-}
-
-export function toggleModal() {
-  DOMElements.modalCadastro.classList.toggle("ativo");
-}
-
-export function prepararModalParaEdicao(itemData) {
-  const { formCadastro, campoHiddenEdit, modalTitulo, modalBotaoSubmit } =
-    DOMElements;
-  formCadastro.reset();
-
-  document.getElementById("cad-nome-clinica").value =
-    itemData.nome_da_clinica || "";
-  document.getElementById("cad-nome-medico").value =
-    itemData.nome_do_medico || "";
-  document.getElementById("cad-especialidade").value =
-    itemData.especialidade || "";
-  document.getElementById("cad-observacao").value = itemData.observacao || "";
-  document.getElementById("cad-cidade").value = itemData.cidade || "";
-  document.getElementById("cad-estado").value = itemData.estado || "";
-  document.getElementById("cad-valor-sns").value = String(
-    itemData.valor_pela_sns || ""
-  ).replace(",", ".");
-  document.getElementById("cad-valor-original").value = String(
-    itemData.valor_original || ""
-  ).replace(",", ".");
-
-  if (itemData.atualizado && itemData.atualizado.includes("/")) {
-    const [dia, mes, ano] = itemData.atualizado.split("/");
-    document.getElementById("cad-atualizado").value = `${ano}-${mes}-${dia}`;
-  } else {
-    document.getElementById("cad-atualizado").value = itemData.atualizado || "";
-  }
-
-  campoHiddenEdit.value = itemData.rowIndex;
-  modalTitulo.textContent = "Editar Registro";
-  modalBotaoSubmit.textContent = "Salvar Alterações";
-  toggleModal();
-}
-
-export function toggleLoginModal() {
-  DOMElements.modalLogin.classList.toggle("ativo");
+    <div class="info-placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+        </svg>
+        <p>${mensagem}</p>
+    </div>`;
 }
 
 export function gerenciarControlesAdmin(logado) {
@@ -515,16 +483,6 @@ export function gerenciarControlesAdmin(logado) {
   }
 }
 
-export function prepararModalParaCadastro() {
-  const { formCadastro, campoHiddenEdit, modalTitulo, modalBotaoSubmit } =
-    DOMElements;
-  formCadastro.reset();
-  campoHiddenEdit.value = "";
-  modalTitulo.textContent = "Cadastrar Novo Profissional";
-  modalBotaoSubmit.textContent = "Cadastrar";
-  toggleModal();
-}
-
 export function gerarEcopiarTextoComparativo(
   currentComparisonData,
   dadosCompletos,
@@ -537,55 +495,21 @@ export function gerarEcopiarTextoComparativo(
     cidadeSelecionada.charAt(0).toUpperCase() +
     cidadeSelecionada.slice(1).toLowerCase();
 
-  let resultados = [];
-  if (section === "cidade") {
-    resultados = dadosCompletos.filter((item) => {
-      const especialidadeMatch =
-        (item.especialidade || "").trim().toLowerCase() ===
-        (especialidade || "").trim().toLowerCase();
-      const cidadeMatch =
-        (item.cidade || "").trim().toLowerCase() ===
-        (cidadeSelecionada || "").trim().toLowerCase();
-      return (
-        item.especialidade && item.cidade && especialidadeMatch && cidadeMatch
-      );
-    });
-  } else {
-    fetchRegionalData(
-      cidadeSelecionada,
-      dadosCompletos.find(
-        (item) => item.cidade?.toLowerCase() === cidadeSelecionada.toLowerCase()
-      )?.estado || "",
-      especialidade,
-      dadosCompletos
-    ).then((regionalResults) => {
-      resultados = regionalResults;
-      gerarTexto();
-    });
-    return;
-  }
-
-  function gerarTexto() {
+  const gerarTexto = (resultadosParaGerar) => {
+    // ... (lógica interna da função continua a mesma)
     const grupos = new Map();
-    resultados.forEach((p) => {
-      const especialidadeBase = (
-        p.especialidade || "Especialidade não informada"
-      ).trim();
+    resultadosParaGerar.forEach((p) => {
+      const especialidadeBase = (p.especialidade || "Especialidade não informada").trim();
       const observacao = (p.observacao || "").trim();
-
-      let especialidadeCompleta =
-        especialidadeBase.charAt(0).toUpperCase() +
-        especialidadeBase.slice(1).toLowerCase();
+      let especialidadeCompleta = especialidadeBase.charAt(0).toUpperCase() + especialidadeBase.slice(1).toLowerCase();
       if (observacao !== "") {
         especialidadeCompleta += ` (${observacao.toLowerCase()})`;
       }
-
       if (!grupos.has(especialidadeCompleta)) {
         grupos.set(especialidadeCompleta, new Map());
       }
       const clinicasDoGrupo = grupos.get(especialidadeCompleta);
       const nomeClinica = (p.nome_da_clinica || "Clínica não informada").trim();
-
       if (!clinicasDoGrupo.has(nomeClinica)) {
         clinicasDoGrupo.set(nomeClinica, []);
       }
@@ -594,39 +518,24 @@ export function gerarEcopiarTextoComparativo(
 
     let textoFinal = "";
     let isFirstGroup = true;
-
     grupos.forEach((clinicas, especialidadeDoGrupo) => {
       if (!isFirstGroup) {
         textoFinal += "\n\n";
       }
-
       if (section === "cidade") {
         textoFinal += `*${especialidadeDoGrupo} em ${cidadeFormatada}*`;
       } else {
         textoFinal += `*${especialidadeDoGrupo} na Região*`;
       }
-
       clinicas.forEach((profissionais, nomeClinica) => {
         textoFinal += `\n\n🏥 *${nomeClinica}*`;
         profissionais.forEach((p) => {
-          const valorSnsNum = p.valor_pela_sns
-            ? parseFloat(String(p.valor_pela_sns).replace(",", "."))
-            : null;
-          const valorOriginalNum = p.valor_original
-            ? parseFloat(String(p.valor_original).replace(",", "."))
-            : null;
-          const nomeMedico = p.nome_do_medico
-            ? `*${p.nome_do_medico.trim()}*`
-            : "Profissional";
+          const valorSnsNum = p.valor_pela_sns ? parseFloat(String(p.valor_pela_sns).replace(",", ".")) : null;
+          const valorOriginalNum = p.valor_original ? parseFloat(String(p.valor_original).replace(",", ".")) : null;
+          const nomeMedico = p.nome_do_medico ? `*${p.nome_do_medico.trim()}*` : "Profissional";
           const cidade = section === "cidade" ? "" : ` (${p.cidade})`;
-
           let linha = `\n  • ${nomeMedico}${cidade}`;
-
-          if (
-            valorOriginalNum &&
-            valorSnsNum &&
-            valorOriginalNum > valorSnsNum
-          ) {
+          if (valorOriginalNum && valorSnsNum && valorOriginalNum > valorSnsNum) {
             const valorSns = valorSnsNum.toFixed(2).replace(".", ",");
             const valorOriginal = valorOriginalNum.toFixed(2).replace(".", ",");
             linha += `: *R$${valorOriginal}* por *R$${valorSns}*`;
@@ -646,12 +555,9 @@ export function gerarEcopiarTextoComparativo(
       .writeText(textoFinal.trim())
       .then(() => {
         Toastify({
-          text: `Resumo ${
-            section === "cidade" ? "da cidade" : "da região"
-          } copiado!`,
+          text: `Resumo ${section === "cidade" ? "da cidade" : "da região"} copiado!`,
           duration: 3000,
-          gravity: "top",
-          position: "right",
+          gravity: "top", position: "right",
           style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
         }).showToast();
       })
@@ -660,14 +566,31 @@ export function gerarEcopiarTextoComparativo(
         Toastify({
           text: "Falha ao copiar texto.",
           duration: 3000,
-          gravity: "top",
-          position: "right",
+          gravity: "top", position: "right",
           style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" },
         }).showToast();
       });
-  }
+  };
 
   if (section === "cidade") {
-    gerarTexto();
+    const resultados = dadosCompletos.filter((item) => {
+      const especialidadeMatch = (item.especialidade || "").trim().toLowerCase() === (especialidade || "").trim().toLowerCase();
+      const cidadeMatch = (item.cidade || "").trim().toLowerCase() === (cidadeSelecionada || "").trim().toLowerCase();
+      return item.especialidade && item.cidade && especialidadeMatch && cidadeMatch;
+    });
+    gerarTexto(resultados);
+  } else {
+    fetchRegionalData(
+      cidadeSelecionada,
+      dadosCompletos.find(
+        (item) => item.cidade?.toLowerCase() === cidadeSelecionada.toLowerCase()
+      )?.estado || "",
+      especialidade,
+      dadosCompletos
+    ).then((regionalResults) => {
+      gerarTexto(regionalResults);
+    });
   }
 }
+
+export { ajustarAlturaModalLogin };

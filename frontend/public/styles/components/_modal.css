@@ -37,25 +37,36 @@
   }
 }
 
+/* --- NOVO ESTILO DO BOTÃO FECHAR --- */
 .fechar-modal {
   position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 2rem;
-  font-weight: bold;
-  color: var(--cinza-borda);
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #f1f1f1;
+  border: none;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .fechar-modal:hover {
-  color: var(--cinza-texto);
+  background-color: #e0e0e0;
+  transform: scale(1.1);
 }
+/* --- FIM DO NOVO ESTILO --- */
+
 
 .modal-content h2 {
   text-align: center;
   color: var(--azul-escuro);
   margin-bottom: 25px;
+  padding-right: 20px; /* Espaço para não ficar em cima do botão fechar */
 }
 
 /* --- Responsividade --- */

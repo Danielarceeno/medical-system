@@ -87,7 +87,7 @@ const methods = {
 };
 
 async function init() {
-  if (sessionStorage.getItem("isLoggedIn") === "true") {
+  if (sessionStorage.getItem("authToken")) {
     gerenciarControlesAdmin(true);
   } else {
     gerenciarControlesAdmin(false);
@@ -96,5 +96,4 @@ async function init() {
   setupEventListeners(appState, methods);
   await methods.refreshData();
 }
-
 document.addEventListener("DOMContentLoaded", init);

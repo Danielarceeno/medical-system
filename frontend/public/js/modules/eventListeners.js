@@ -20,8 +20,8 @@ export function setupEventListeners(appState, methods) {
     btnLogin,
     modalLogin,
     fecharModalLogin,
-    formLogin,
     btnCadastrar,
+    btnLogout,
   } = DOMElements;
 
   const filtros = [
@@ -50,11 +50,17 @@ export function setupEventListeners(appState, methods) {
     methods.aplicarFiltrosErenderizar();
   });
 
-  if (btnLogin) {
-    btnLogin.addEventListener("click", UI.toggleLoginModal);
+  const formRequestCode = document.getElementById("form-request-code");
+  const formVerifyCode = document.getElementById("form-verify-code");
+  const btnBackToEmail = document.getElementById("btn-back-to-email");
+  const emailInput = document.getElementById("login-email");
+  const codeInput = document.getElementById("login-code");
+
+  if (DOMElements.btnLogin) {
+    DOMElements.btnLogin.addEventListener("click", UI.toggleLoginModal);
   }
-  if (fecharModalLogin) {
-    fecharModalLogin.addEventListener("click", UI.toggleLoginModal);
+  if (DOMElements.fecharModalLogin) {
+    DOMElements.fecharModalLogin.addEventListener("click", UI.toggleLoginModal);
   }
   if (modalLogin) {
     modalLogin.addEventListener("click", (event) => {
@@ -62,33 +68,83 @@ export function setupEventListeners(appState, methods) {
     });
   }
 
-  if (formLogin) {
-    formLogin.addEventListener("submit", async (event) => {
+  if (formRequestCode) {
+    formRequestCode.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const email = document.getElementById("login-email").value;
-      const senha = document.getElementById("login-senha").value;
+      const email = emailInput.value;
+      const submitButton = formRequestCode.querySelector('button[type="submit"]');
+
+      submitButton.classList.add("loading");
+      submitButton.disabled = true;
 
       try {
-        await API.fazerLogin(email, senha);
-        sessionStorage.setItem("isLoggedIn", "true");
+        await API.requestCode(email);
+        document.getElementById("verification-email-display").textContent = email;
+        UI.ajustarAlturaModalLogin(formVerifyCode);
+
+        modalLogin.classList.add('step-2-active');
+        
+        setTimeout(() => codeInput.focus(), 400);
+
+        Toastify({
+          text: "Código de verificação enviado!",
+          duration: 3000,
+          gravity: "top", position: "right",
+          style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
+        }).showToast();
+      } finally {
+        submitButton.classList.remove("loading");
+        submitButton.disabled = false;
+      }
+    });
+  }
+
+  if (btnBackToEmail) {
+      btnBackToEmail.addEventListener('click', () => {
+          UI.ajustarAlturaModalLogin(formRequestCode);
+          modalLogin.classList.remove('step-2-active');
+      });
+  }
+
+  if (formVerifyCode) {
+    formVerifyCode.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = emailInput.value;
+      const code = codeInput.value;
+      const submitButton = formVerifyCode.querySelector('button[type="submit"]');
+      submitButton.classList.add("loading");
+      submitButton.disabled = true;
+      try {
+        const response = await API.verifyCode(email, code);
+        sessionStorage.setItem("authToken", response.token);
         UI.gerenciarControlesAdmin(true);
         UI.toggleLoginModal();
         Toastify({
           text: "Login bem-sucedido!",
           duration: 3000,
-          gravity: "top",
-          position: "right",
+          gravity: "top", position: "right",
           style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
         }).showToast();
-      } catch (error) {
-        Toastify({
-          text: error.message,
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" },
-        }).showToast();
+        methods.refreshData();
+      } finally {
+        submitButton.classList.remove("loading");
+        submitButton.disabled = false;
       }
+    });
+  }
+  
+  if (btnLogout) {
+    btnLogout.addEventListener("click", () => {
+      sessionStorage.removeItem("authToken");
+      UI.gerenciarControlesAdmin(false);
+      methods.refreshData();
+      Toastify({
+        text: "Você saiu com sucesso!",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
+      }).showToast();
     });
   }
 
@@ -116,6 +172,7 @@ export function setupEventListeners(appState, methods) {
         valorSns: document.getElementById("cad-valor-sns").value,
         valorOriginal: document.getElementById("cad-valor-original").value,
         atualizado: document.getElementById("cad-atualizado").value,
+        observacao: document.getElementById("cad-observacao").value,
       };
 
       await API.salvarDados(dadosDoForm, DOMElements.campoHiddenEdit.value);
@@ -134,15 +191,13 @@ export function setupEventListeners(appState, methods) {
   resultadosContainer.addEventListener("click", async (event) => {
     const card = event.target.closest(".card");
     if (!card) return;
-
     const targetButton = event.target.closest("button");
-    if (targetButton && sessionStorage.getItem("isLoggedIn") === "true") {
+    if (targetButton && sessionStorage.getItem("authToken")) {
       const rowIndex = card.dataset.rowIndex;
       const itemData = appState.dadosCompletos.find(
         (item) => item.rowIndex == rowIndex
       );
       if (!itemData) return;
-
       if (targetButton.classList.contains("btn-editar")) {
         UI.prepararModalParaEdicao(itemData);
       } else if (targetButton.classList.contains("btn-excluir")) {
@@ -153,9 +208,7 @@ export function setupEventListeners(appState, methods) {
             duration: 3000,
             gravity: "top",
             position: "right",
-            style: {
-              background: "linear-gradient(to right, #00b09b, #96c93d)",
-            },
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
           }).showToast();
           methods.refreshData();
         }
@@ -166,10 +219,8 @@ export function setupEventListeners(appState, methods) {
         .forEach((c) => c.classList.remove("selecionado"));
       card.classList.add("selecionado");
       comparacaoContainer.classList.add("visivel");
-
       const especialidade = card.dataset.especialidade?.trim();
       const cidadeSelecionada = card.dataset.cidade?.trim();
-
       if (especialidade && cidadeSelecionada) {
         appState.comparisonCurrentPage = 1;
         appState.currentComparisonData = { especialidade, cidadeSelecionada };
@@ -185,7 +236,6 @@ export function setupEventListeners(appState, methods) {
           "Card sem especialidade ou cidade para poder comparar."
         );
       }
-
       if (window.innerWidth <= 900) {
         comparacaoContainer.scrollIntoView({
           behavior: "smooth",
@@ -194,7 +244,6 @@ export function setupEventListeners(appState, methods) {
       }
     }
   });
-
   paginationContainer.addEventListener("click", (event) => {
     const pageBtn = event.target.closest(".page-btn");
     if (pageBtn && !pageBtn.disabled) {
@@ -206,14 +255,9 @@ export function setupEventListeners(appState, methods) {
       );
     }
   });
-
   comparacaoContainer.addEventListener("click", async (event) => {
-    const copyCidadeBtn = event.target.closest(
-      "#btn-copiar-comparativo-cidade"
-    );
-    const copyRegiaoBtn = event.target.closest(
-      "#btn-copiar-comparativo-regiao"
-    );
+    const copyCidadeBtn = event.target.closest("#btn-copiar-comparativo-cidade");
+    const copyRegiaoBtn = event.target.closest("#btn-copiar-comparativo-regiao");
     if (copyCidadeBtn) {
       event.stopPropagation();
       UI.gerarEcopiarTextoComparativo(
@@ -232,7 +276,6 @@ export function setupEventListeners(appState, methods) {
       );
       return;
     }
-
     const toggleBtn = event.target.closest(".toggle-section");
     if (toggleBtn) {
       event.stopPropagation();
@@ -252,7 +295,6 @@ export function setupEventListeners(appState, methods) {
       }
       return;
     }
-
     const pageBtn = event.target.closest(".comparison-page-btn");
     if (pageBtn && !pageBtn.disabled) {
       event.stopPropagation();
@@ -276,7 +318,6 @@ export function setupEventListeners(appState, methods) {
       }
     }
   });
-
   document.addEventListener("click", (event) => {
     const isClickInsideResults = event.target.closest(".resultados-wrapper");
     const isClickInsideComparison = event.target.closest(
@@ -290,19 +331,4 @@ export function setupEventListeners(appState, methods) {
       }
     }
   });
-
-  const { btnLogout } = DOMElements;
-  if (btnLogout) {
-    btnLogout.addEventListener("click", () => {
-      sessionStorage.removeItem("isLoggedIn");
-      UI.gerenciarControlesAdmin(false);
-      Toastify({
-        text: "Você saiu com sucesso!",
-        duration: 3000,
-        gravity: "top",
-        position: "right",
-        style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
-      }).showToast();
-    });
-  }
 }

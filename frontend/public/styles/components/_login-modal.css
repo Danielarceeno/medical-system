@@ -1,0 +1,99 @@
+#modal-login .modal-content {
+  max-width: 400px;
+  overflow: hidden;
+  position: relative;
+  transition: height 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+#modal-login .login-forms-wrapper {
+  display: flex;
+  gap: 60px;
+  width: 200%;
+  transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+#modal-login.step-2-active .login-forms-wrapper {
+  transform: translateX(-50%); 
+}
+
+#modal-login form {
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+#modal-login h2 {
+  margin-bottom: 20px;
+}
+
+#modal-login p.info-text {
+  text-align: center;
+  color: #555;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+#modal-login strong {
+  color: var(--azul-escuro);
+  word-break: break-all;
+}
+
+#login-code {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.5em;
+  font-weight: bold;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--azul-escuro);
+  cursor: pointer;
+  padding: 10px 0;
+  margin-top: 10px;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}
+.botao-form-submit {
+  position: relative;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.botao-form-submit .spinner {
+  display: none;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s ease-in-out infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -10px;
+  margin-left: -10px;
+}
+
+.botao-form-submit.loading .btn-text {
+  opacity: 0;
+}
+
+.botao-form-submit.loading .spinner {
+  display: block;
+}
+
+.botao-form-submit:disabled {
+  background-color: #a0a0a0;
+  cursor: wait;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
